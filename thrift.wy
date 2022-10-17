@@ -1,0 +1,46 @@
+;;; thrift.wy -- LALR grammar for thrift
+
+;;; Commentary:
+;;
+;; This grammar fully parses correct apache thrift 0.17.0 syntax.
+;;
+;; It is based on the grammar for thrift version 0.17.0
+
+%{
+  ;; Stack of enum names in scope.
+  (defvar wisent-thrift-wy--enums nil)
+  }
+
+%package wisent-thrift-wy
+%provide thrift-wy
+
+%languagemode thrift-mode
+
+;; The default goal.
+%start program
+
+;;; lexer
+;; Strings identifier
+%token <id>     ;; syntax "\\(\\[a-zA-Z_\\]\\(\\.\\[a-zA-Z_0-9\\]|\\[a-zA-Z_0-9\\]\\)*)" matchdatatype string
+%token <id>     tok_literal
+%token <dtext>  tok_doctext
+
+;; Define the lexer for this grammar
+(define-lex wisent-thrift-lexer
+  "Lexical analyzer that handles Thrift buffers.
+It ignores whitespaces, newlines and comments."
+  semantic-lex-ignore-whitespace
+  semantic-lex-ignore-newline
+  semantic-lex-ignore-comments
+  ;;;; Auto-generated analyzers.
+  wisent-thrift-wy--<number>-regexp-analyzer
+  wisent-thrift-wy--<string>-sexp-analyzer
+  ;; Must detect keywords before other symbols
+  wisent-thrift-wy--<keyword>-keyword-analyzer
+  wisent-thrift-wy--<symbol>-regexp-analyzer
+  wisent-thrift-wy--<punctuation>-string-analyzer
+  wisent-thrift-wy--<block>-block-analyzer
+  ;;;;
+  semantic-lex-default-action)
+
+;;; thrift.wy ends here
