@@ -21,9 +21,8 @@
 
 ;;; lexer
 ;; Strings identifier
-%token <id>     ;; syntax "\\(\\[a-zA-Z_\\]\\(\\.\\[a-zA-Z_0-9\\]|\\[a-zA-Z_0-9\\]\\)*)" matchdatatype string
+%type <id>     ;; syntax "\\([a-zA-Z_]\\(\\.[a-zA-Z_0-9]\\|[a-zA-Z_0-9]\\)*\\)" matchdatatype string
 %token <id>     tok_literal
-%token <dtext>  tok_doctext
 
 ;; Define the lexer for this grammar
 (define-lex wisent-thrift-lexer
@@ -33,13 +32,7 @@ It ignores whitespaces, newlines and comments."
   semantic-lex-ignore-newline
   semantic-lex-ignore-comments
   ;;;; Auto-generated analyzers.
-  wisent-thrift-wy--<number>-regexp-analyzer
-  wisent-thrift-wy--<string>-sexp-analyzer
-  ;; Must detect keywords before other symbols
-  wisent-thrift-wy--<keyword>-keyword-analyzer
-  wisent-thrift-wy--<symbol>-regexp-analyzer
-  wisent-thrift-wy--<punctuation>-string-analyzer
-  wisent-thrift-wy--<block>-block-analyzer
+  wisent-thrift-wy--<id>-regexp-analyzer
   ;;;;
   semantic-lex-default-action)
 
