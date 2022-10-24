@@ -17,7 +17,7 @@
 %languagemode thrift-mode
 
 ;; The default goal.
-%start program
+%start Program
 
 ;;; lexer
 ;; Strings identifier
@@ -36,8 +36,317 @@
 %type  <keyword> ;;syntax "\\(\\sw\\|\\s_\\)+" matchdatatype keyword
 
 ;; Header keywords
-%token <keyword> "include"
-%token <keyword> "namespace"
+%keyword tok_include		"include"
+%keyword tok_namespace		"namespace"
+%keyword tok_cpp_include	"cpp_include"
+%keyword tok_cpp_type		"cpp_type"
+%keyword tok_xsd_all		"xsd_all"
+%keyword tok_xsd_optional	"xsd_optional"
+%keyword tok_xsd_nillable	"xsd_nillable"
+%keyword tok_xsd_attrs		"xsd_attrs"
+
+;; Base datatype keywords
+%keyword tok_void		"void"
+%keyword tok_bool		"bool"
+%keyword tok_string		"string"
+%keyword tok_binary		"binary"
+%keyword tok_uuid		"uuid"
+%keyword tok_byte		"byte"
+%keyword tok_i8			"i8"
+%keyword tok_i16		"i16"
+%keyword tok_i32		"i32"
+%keyword tok_i64		"i64"
+%keyword tok_double		"double"
+
+;; Complex type keywords
+%keyword tok_map		"map"
+%keyword tok_list		"list"
+%keyword tok_set		"set"
+
+;; Function modifiers
+%keyword tok_oneway		"oneway"
+%keyword tok_async		"async"
+
+;; Thrift language keywords
+%keyword tok_typedef		"typedef"
+%keyword tok_struct		"struct"
+%keyword tok_xception		"xception"
+%keyword tok_throws		"throws"
+%keyword tok_extends		"extends"
+%keyword tok_service		"service"
+%keyword tok_enum		"enum"
+%keyword tok_const		"const"
+%keyword tok_required		"required"
+%keyword tok_optional		"optional"
+%keyword tok_union		"union"
+%keyword tok_reference		"reference"
+
+%%
+
+;; Thrift Grammar Implementation.
+;;
+;; For the most part this source file works its way top down from what you
+;; might expect to find in a typical .thrift file, i.e. type definitions and
+;; namespaces up top followed by service definitions using those types.
+Program:
+  HeaderList DefinitionList
+
+ ;; We have to DestroyDocText here, otherwise it catches the doctext
+ ;; on the first real element.
+HeaderList:
+  HeaderList DestroyDocText Header
+
+Header:
+  Include
+| tok_namespace tok_identifier tok_identifier TypeAnnotations
+| tok_namespace '*' tok_identifier
+| tok_cpp_include tok_literal
+
+Include:
+  tok_include tok_literal
+
+DefinitionList:
+  DefinitionList CaptureDocText Definition
+
+Definition:
+  Const
+| TypeDefinition
+| Service
+
+TypeDefinition:
+  Typedef
+| Enum
+| Struct
+| Xception
+
+CommaOrSemicolonOptional:
+  ','
+| ';'
+|
+
+Typedef:
+  tok_typedef FieldType tok_identifier TypeAnnotations CommaOrSemicolonOptional
+
+Enum:
+  tok_enum tok_identifier '{' EnumDefList '}' TypeAnnotations
+
+EnumDefList:
+  EnumDefList EnumDef
+
+EnumDef:
+  CaptureDocText EnumValue TypeAnnotations CommaOrSemicolonOptional
+
+EnumValue:
+  tok_identifier '=' tok_int_constant
+ |
+  tok_identifier
+
+Const:
+  tok_const FieldType tok_identifier '=' ConstValue CommaOrSemicolonOptional
+
+ConstValue:
+  tok_int_constant
+| tok_dub_constant
+| tok_literal
+| tok_identifier
+| ConstList
+| ConstMap
+
+ConstList:
+  '[' ConstListContents ']'
+
+ConstListContents:
+  ConstListContents ConstValue CommaOrSemicolonOptional
+
+ConstMap:
+  '{' ConstMapContents '}'
+
+ConstMapContents:
+  ConstMapContents ConstValue ':' ConstValue CommaOrSemicolonOptional
+
+StructHead:
+  tok_struct
+| tok_union
+
+Struct:
+  StructHead tok_identifier XsdAll '{' FieldList '}' TypeAnnotations
+
+XsdAll:
+  tok_xsd_all
+
+XsdOptional:
+  tok_xsd_optional
+
+XsdNillable:
+  tok_xsd_nillable
+
+XsdAttributes:
+  tok_xsd_attrs '{' FieldList '}'
+
+Xception:
+  tok_xception tok_identifier '{' FieldList '}' TypeAnnotations
+
+Service:
+  tok_service tok_identifier Extends '{' FlagArgs FunctionList UnflagArgs '}' TypeAnnotations
+
+Extends:
+  tok_extends tok_identifier
+
+FunctionList:
+  FunctionList Function
+
+Function:
+  CaptureDocText Oneway FunctionType tok_identifier '(' FieldList ')' Throws TypeAnnotations CommaOrSemicolonOptional
+
+Oneway:
+  tok_oneway
+|  tok_async  // deprecated
+
+Throws:
+  tok_throws '(' FieldList ')'
+
+FieldList:
+  FieldList Field
+
+Field:
+  CaptureDocText FieldIdentifier FieldRequiredness FieldType FieldReference FieldName FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
+
+FieldName:  // identifiers and everything that could be one if it would not be identified as a different token already and excluding the "xsd*" keywords to follow a FieldName
+  tok_identifier
+| tok_namespace
+| tok_cpp_include
+| tok_cpp_type
+| tok_include
+| tok_void
+| tok_bool
+| tok_byte
+| tok_i8
+| tok_i16
+| tok_i32
+| tok_i64
+| tok_double
+| tok_string
+| tok_binary
+| tok_uuid
+| tok_map
+| tok_list
+| tok_set
+| tok_oneway
+| tok_async
+| tok_typedef
+| tok_struct
+| tok_union
+| tok_xception
+| tok_extends
+| tok_throws
+| tok_service
+| tok_enum
+| tok_const
+| tok_required
+| tok_optional
+
+
+FieldIdentifier:
+  tok_int_constant ':'
+
+FieldReference:
+  tok_reference
+
+FieldRequiredness:
+  tok_required
+| tok_optional
+
+FieldValue:
+  '=' ConstValue
+
+FunctionType:
+  FieldType
+| tok_void
+
+FieldType:
+  tok_identifier
+| BaseType
+| ContainerType
+
+BaseType: SimpleBaseType TypeAnnotations
+
+SimpleBaseType:
+  tok_string
+| tok_binary
+| tok_uuid
+| tok_bool
+| tok_byte
+| tok_i8
+| tok_i16
+| tok_i32
+| tok_i64
+| tok_double
+
+ContainerType: SimpleContainerType TypeAnnotations
+
+SimpleContainerType:
+  MapType
+| SetType
+| ListType
+
+MapType:
+  tok_map CppType '<' FieldType ',' FieldType '>'
+
+SetType:
+  tok_set CppType '<' FieldType '>'
+
+ListType:
+  tok_list CppType '<' FieldType '>' CppType   // the second CppType is for compatibility reasons = deprecated
+
+CppType:
+  tok_cpp_type tok_literal
+
+TypeAnnotations:
+  '(' TypeAnnotationList ')'
+    {
+      pdebug("TypeAnnotations -> ( TypeAnnotationList )");
+      $$ = $2;
+    }
+|
+    {
+      $$ = nullptr;
+    }
+
+TypeAnnotationList:
+  TypeAnnotationList TypeAnnotation
+    {
+      pdebug("TypeAnnotationList -> TypeAnnotationList , TypeAnnotation");
+      $$ = $1;
+      $$->annotations_[$2->key].push_back($2->val);
+      delete $2;
+    }
+|
+    {
+      /* Just use a dummy structure to hold the annotations. */
+      $$ = new t_struct(g_program);
+    }
+
+TypeAnnotation:
+  tok_identifier TypeAnnotationValue CommaOrSemicolonOptional
+    {
+      pdebug("TypeAnnotation -> TypeAnnotationValue");
+      $$ = new t_annotation;
+      $$->key = $1;
+      $$->val = $2;
+    }
+
+TypeAnnotationValue:
+  '=' tok_literal
+    {
+      pdebug("TypeAnnotationValue -> = tok_literal");
+      $$ = $2;
+    }
+|
+    {
+      pdebug("TypeAnnotationValue ->");
+      $$ = strdup("1");
+    }
+%%
 
 ;; Define the lexer for this grammar
 (define-lex wisent-thrift-lexer
