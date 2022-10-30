@@ -89,263 +89,322 @@
 ;; might expect to find in a typical .thrift file, i.e. type definitions and
 ;; namespaces up top followed by service definitions using those types.
 Program:
-  HeaderList DefinitionList
+    HeaderList DefinitionList
+  ;
 
- ;; We have to DestroyDocText here, otherwise it catches the doctext
- ;; on the first real element.
+CaptureDocText:
+  ;
+
+DestroyDocText:
+  ;
+
+;; We have to DestroyDocText here, otherwise it catches the doctext
+;; on the first real element.
 HeaderList:
-  HeaderList DestroyDocText Header
+    HeaderList DestroyDocText Header
+  | ;;EMPTY
+  ;
 
 Header:
-  Include
-| tok_namespace tok_identifier tok_identifier TypeAnnotations
-| tok_namespace '*' tok_identifier
-| tok_cpp_include tok_literal
+    Include
+  | tok_namespace tok_identifier tok_identifier TypeAnnotations
+  | tok_namespace '*' tok_identifier
+  | tok_cpp_include tok_literal
+  ;
 
 Include:
-  tok_include tok_literal
+    tok_include tok_literal
 
 DefinitionList:
-  DefinitionList CaptureDocText Definition
+    DefinitionList CaptureDocText Definition
+  | ;;EMPTY
+  ;
 
 Definition:
-  Const
-| TypeDefinition
-| Service
+    Const
+  | TypeDefinition
+  | Service
+  ;
 
 TypeDefinition:
-  Typedef
-| Enum
-| Struct
-| Xception
+    Typedef
+  | Enum
+  | Struct
+  | Xception
+  ;
 
 CommaOrSemicolonOptional:
-  ','
-| ';'
-|
+    ','
+  | ';'
+  | ;;EMPTY
+  ;
 
 Typedef:
-  tok_typedef FieldType tok_identifier TypeAnnotations CommaOrSemicolonOptional
+    tok_typedef FieldType tok_identifier TypeAnnotations CommaOrSemicolonOptional
+  ;
 
 Enum:
-  tok_enum tok_identifier '{' EnumDefList '}' TypeAnnotations
+    tok_enum tok_identifier '{' EnumDefList '}' TypeAnnotations
+  ;
 
 EnumDefList:
-  EnumDefList EnumDef
+    EnumDefList EnumDef
+  | ;;EMPTY
+  ;
 
 EnumDef:
-  CaptureDocText EnumValue TypeAnnotations CommaOrSemicolonOptional
+    CaptureDocText EnumValue TypeAnnotations CommaOrSemicolonOptional
+  ;
 
 EnumValue:
-  tok_identifier '=' tok_int_constant
- |
-  tok_identifier
+    tok_identifier '=' tok_int_constant
+  | tok_identifier
+  ;
 
 Const:
-  tok_const FieldType tok_identifier '=' ConstValue CommaOrSemicolonOptional
+    tok_const FieldType tok_identifier '=' ConstValue CommaOrSemicolonOptional
+  ;
 
 ConstValue:
-  tok_int_constant
-| tok_dub_constant
-| tok_literal
-| tok_identifier
-| ConstList
-| ConstMap
+    tok_int_constant
+  | tok_dub_constant
+  | tok_literal
+  | tok_identifier
+  | ConstList
+  | ConstMap
+  ;
 
 ConstList:
-  '[' ConstListContents ']'
+    '[' ConstListContents ']'
+  | ;;EMPTY
+  ;
+
 
 ConstListContents:
-  ConstListContents ConstValue CommaOrSemicolonOptional
+    ConstListContents ConstValue CommaOrSemicolonOptional
+  | ;;EMPTY
+  ;
 
 ConstMap:
-  '{' ConstMapContents '}'
+    '{' ConstMapContents '}'
+  ;
 
 ConstMapContents:
-  ConstMapContents ConstValue ':' ConstValue CommaOrSemicolonOptional
+    ConstMapContents ConstValue ':' ConstValue CommaOrSemicolonOptional
+  | ;;EMPTY
+  ;
 
 StructHead:
-  tok_struct
-| tok_union
+    tok_struct
+  | tok_union
+  ;
 
 Struct:
-  StructHead tok_identifier XsdAll '{' FieldList '}' TypeAnnotations
+    StructHead tok_identifier XsdAll '{' FieldList '}' TypeAnnotations
+  ;
 
 XsdAll:
-  tok_xsd_all
+    tok_xsd_all
+  | ;;EMPTY
+  ;
 
 XsdOptional:
-  tok_xsd_optional
+    tok_xsd_optional
+  | ;;EMPTY
+  ;
 
 XsdNillable:
-  tok_xsd_nillable
+    tok_xsd_nillable
+  | ;;EMPTY
+  ;
 
 XsdAttributes:
-  tok_xsd_attrs '{' FieldList '}'
+    tok_xsd_attrs '{' FieldList '}'
+  | ;;EMPTY
+  ;
 
 Xception:
-  tok_xception tok_identifier '{' FieldList '}' TypeAnnotations
+    tok_xception tok_identifier '{' FieldList '}' TypeAnnotations
+  ;
 
 Service:
-  tok_service tok_identifier Extends '{' FlagArgs FunctionList UnflagArgs '}' TypeAnnotations
+    tok_service tok_identifier Extends '{' FlagArgs FunctionList UnflagArgs '}' TypeAnnotations
+  ;
+
+FlagArgs:
+  ;
+
+UnflagArgs:
+  ;
 
 Extends:
-  tok_extends tok_identifier
+    tok_extends tok_identifier
+  | ;;EMPTY
+  ;
 
 FunctionList:
-  FunctionList Function
+    FunctionList Function
+  | ;;EMPTY
+  ;
 
 Function:
-  CaptureDocText Oneway FunctionType tok_identifier '(' FieldList ')' Throws TypeAnnotations CommaOrSemicolonOptional
+    CaptureDocText Oneway FunctionType tok_identifier '(' FieldList ')' Throws TypeAnnotations CommaOrSemicolonOptional
+  ;
 
 Oneway:
-  tok_oneway
-|  tok_async  // deprecated
+    tok_oneway
+  |  tok_async  ;; deprecated
+  | ;;EMPTY
+  ;
 
 Throws:
-  tok_throws '(' FieldList ')'
+    tok_throws '(' FieldList ')'
+  | ;;EMPTY
+  ;
 
 FieldList:
-  FieldList Field
+    FieldList Field
+  | ;;EMPTY
+  ;
 
 Field:
-  CaptureDocText FieldIdentifier FieldRequiredness FieldType FieldReference FieldName FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
+    CaptureDocText FieldIdentifier FieldRequiredness FieldType FieldReference FieldName FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
+  ;
 
-FieldName:  // identifiers and everything that could be one if it would not be identified as a different token already and excluding the "xsd*" keywords to follow a FieldName
-  tok_identifier
-| tok_namespace
-| tok_cpp_include
-| tok_cpp_type
-| tok_include
-| tok_void
-| tok_bool
-| tok_byte
-| tok_i8
-| tok_i16
-| tok_i32
-| tok_i64
-| tok_double
-| tok_string
-| tok_binary
-| tok_uuid
-| tok_map
-| tok_list
-| tok_set
-| tok_oneway
-| tok_async
-| tok_typedef
-| tok_struct
-| tok_union
-| tok_xception
-| tok_extends
-| tok_throws
-| tok_service
-| tok_enum
-| tok_const
-| tok_required
-| tok_optional
+;; identifiers and everything that could be one if it would not be identified as
+;; a different token already and excluding the "xsd*" keywords to follow a
+;; FieldName
+FieldName:
+    tok_identifier
+  | tok_namespace
+  | tok_cpp_include
+  | tok_cpp_type
+  | tok_include
+  | tok_void
+  | tok_bool
+  | tok_byte
+  | tok_i8
+  | tok_i16
+  | tok_i32
+  | tok_i64
+  | tok_double
+  | tok_string
+  | tok_binary
+  | tok_uuid
+  | tok_map
+  | tok_list
+  | tok_set
+  | tok_oneway
+  | tok_async
+  | tok_typedef
+  | tok_struct
+  | tok_union
+  | tok_xception
+  | tok_extends
+  | tok_throws
+  | tok_service
+  | tok_enum
+  | tok_const
+  | tok_required
+  | tok_optional
+  ;
 
 
 FieldIdentifier:
-  tok_int_constant ':'
+    tok_int_constant ':'
+  | ;;EMPTY
+  ;
 
 FieldReference:
-  tok_reference
+    tok_reference
+  | ;;EMPTY
+  ;
 
 FieldRequiredness:
-  tok_required
-| tok_optional
+    tok_required
+  | tok_optional
+  | ;;EMPTY
+  ;
 
 FieldValue:
-  '=' ConstValue
+    '=' ConstValue
+  | ;;EMPTY
+  ;
 
 FunctionType:
-  FieldType
-| tok_void
+    FieldType
+  | tok_void
+  ;
 
 FieldType:
-  tok_identifier
-| BaseType
-| ContainerType
+    tok_identifier
+  | BaseType
+  | ContainerType
+  ;
 
-BaseType: SimpleBaseType TypeAnnotations
+BaseType:
+    SimpleBaseType TypeAnnotations
+  ;
 
 SimpleBaseType:
-  tok_string
-| tok_binary
-| tok_uuid
-| tok_bool
-| tok_byte
-| tok_i8
-| tok_i16
-| tok_i32
-| tok_i64
-| tok_double
+    tok_string
+  | tok_binary
+  | tok_uuid
+  | tok_bool
+  | tok_byte
+  | tok_i8
+  | tok_i16
+  | tok_i32
+  | tok_i64
+  | tok_double
+  ;
 
-ContainerType: SimpleContainerType TypeAnnotations
+ContainerType:
+    SimpleContainerType TypeAnnotations
+  ;
 
 SimpleContainerType:
-  MapType
-| SetType
-| ListType
+    MapType
+  | SetType
+  | ListType
+  ;
 
 MapType:
-  tok_map CppType '<' FieldType ',' FieldType '>'
+    tok_map CppType '<' FieldType ',' FieldType '>'
+  ;
 
 SetType:
-  tok_set CppType '<' FieldType '>'
+    tok_set CppType '<' FieldType '>'
+  ;
 
 ListType:
-  tok_list CppType '<' FieldType '>' CppType   // the second CppType is for compatibility reasons = deprecated
+    tok_list CppType '<' FieldType '>' CppType   // the second CppType is for compatibility reasons = deprecated
+  ;
 
 CppType:
-  tok_cpp_type tok_literal
+    tok_cpp_type tok_literal
+  | ;;EMPTY
+  ;
 
 TypeAnnotations:
-  '(' TypeAnnotationList ')'
-    {
-      pdebug("TypeAnnotations -> ( TypeAnnotationList )");
-      $$ = $2;
-    }
-|
-    {
-      $$ = nullptr;
-    }
+    '(' TypeAnnotationList ')'
+  | ;;EMPTY
+  ;
 
 TypeAnnotationList:
-  TypeAnnotationList TypeAnnotation
-    {
-      pdebug("TypeAnnotationList -> TypeAnnotationList , TypeAnnotation");
-      $$ = $1;
-      $$->annotations_[$2->key].push_back($2->val);
-      delete $2;
-    }
-|
-    {
-      /* Just use a dummy structure to hold the annotations. */
-      $$ = new t_struct(g_program);
-    }
+    TypeAnnotationList TypeAnnotation
+  | ;;EMPTY
+  ;
 
 TypeAnnotation:
-  tok_identifier TypeAnnotationValue CommaOrSemicolonOptional
-    {
-      pdebug("TypeAnnotation -> TypeAnnotationValue");
-      $$ = new t_annotation;
-      $$->key = $1;
-      $$->val = $2;
-    }
+    tok_identifier TypeAnnotationValue CommaOrSemicolonOptional
+  ;
 
 TypeAnnotationValue:
-  '=' tok_literal
-    {
-      pdebug("TypeAnnotationValue -> = tok_literal");
-      $$ = $2;
-    }
-|
-    {
-      pdebug("TypeAnnotationValue ->");
-      $$ = strdup("1");
-    }
+    '=' tok_literal
+  | ;;EMPTY
+  ;
+
 %%
 
 ;; Define the lexer for this grammar
