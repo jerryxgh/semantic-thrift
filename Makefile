@@ -13,8 +13,8 @@ EMACS=emacs
 
 LOADPATH= ./
 
-wy_SEMANTIC_GRAMMAR=calc.wy java.wy 
-languages_LISP=calc.el java.el
+wy_SEMANTIC_GRAMMAR=calc.wy java.wy thrift.wy
+languages_LISP=calc.el java.el thrift.el
 VERSION=1.1beta
 
 .PHONY: all

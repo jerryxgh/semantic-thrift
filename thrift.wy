@@ -21,19 +21,18 @@
 
 ;;; lexer
 ;; Strings identifier
-%type <symbol>      ;;syntax "\\(\\sw\\|\\s_\\)+"
+%type <symbol>      syntax "\\(\\sw\\|\\s_\\)+"
 %token <symbol>     tok_identifier
-%type <string>      ;;syntax "\\s\"" matchdatatype sexp
+%type <string>      syntax "\\s\"" matchdatatype sexp
 %token <string>     tok_literal
 
 ;; Constant values
-%type <iconst>      ;;syntax "[1-9][0-9]*[lL]\\|0[xX][[:xdigit:]]+[lL]\\|0[0-7]*[lL]"
-%token <iconst> tok_int_constant
-%type <dconst>      ;;syntax semantic-lex-number-expression
-%token <dconst> tok_dub_constant
+%type <number>      semantic-lex-number-expression
+%token <number> tok_int_constant "\\([+-]?[0-9]+\\|[+-]?0x[0-9A-Fa-f]+\\)"
+%token <number> tok_dub_constant "\\([+-]?[0-9]*\\(\.[0-9]+\\)?\\([eE][+-]?[0-9]+\\)?\\)"
 
 ;; Generate a keyword analyzer
-%type  <keyword> ;;syntax "\\(\\sw\\|\\s_\\)+" matchdatatype keyword
+%type  <keyword> syntax "\\(\\sw\\|\\s_\\)+" matchdatatype keyword
 
 ;; Header keywords
 %keyword tok_include		"include"
@@ -115,6 +114,7 @@ Header:
 
 Include:
     tok_include tok_literal
+  ;
 
 DefinitionList:
     DefinitionList CaptureDocText Definition
@@ -379,7 +379,7 @@ SetType:
   ;
 
 ListType:
-    tok_list CppType '<' FieldType '>' CppType   // the second CppType is for compatibility reasons = deprecated
+    tok_list CppType '<' FieldType '>'
   ;
 
 CppType:
@@ -416,11 +416,11 @@ It ignores whitespaces, newlines and comments."
   semantic-lex-ignore-newline
   semantic-lex-ignore-comments
   ;;;; Auto-generated analyzers.
+  wisent-thrift-wy--<number>-regexp-analyzer
+  wisent-thrift-wy--<string>-sexp-analyzer
+  ;; Must detect keywords before other symbols
+  wisent-thrift-wy--<keyword>-keyword-analyzer
   wisent-thrift-wy--<symbol>-regexp-analyzer
-  wisent-thrift-wy--<string>-regexp-analyzer
-  wisent-thrift-wy--<iconst>-regexp-analyzer
-  wisent-thrift-wy--<dconst>-regexp-analyzer
-  wisent-thrift-wy--<keyword>-regexp-analyzer
   ;;;;
   semantic-lex-default-action)
 
