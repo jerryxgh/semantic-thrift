@@ -27,8 +27,54 @@
 ;;   - Initial release
 
 ;;; Code:
+(require 'thrift-wy)
+(require 'semantic)
 
+;; (define-mode-local-override semantic-tag-components thrift-mode (tag)
+;;   "Return the children of tag TAG."
+;;   (cond
+;;    ((memq (semantic-tag-class tag)
+;;          '(generic-node graph-attributes node link))
+;;     (semantic-tag-get-attribute tag :attributes)
+;;     )
+;;    ((memq (semantic-tag-class tag)
+;;          '(digraph graph))
+;;     (semantic-tag-get-attribute tag :members)
+;;     )))
 
+;;;###autoload
+(defun wisent-thrift-setup-parser ()
+  "Setup buffer for parse."
+  (thrift-wy--install-parser)
+
+  (setq
+   ;; Lexical Analysis
+   semantic-lex-analyzer 'wisent-thrift-lexer
+   ;; semantic-lex-syntax-modifications
+   ;; '(
+   ;;   (?- ".")
+   ;;   (?= ".")
+   ;;   (?, ".")
+   ;;   (?> ".")
+   ;;   (?< ".")
+   ;;   )
+   ;; Parsing
+   ;; Environment
+   semantic-imenu-summary-function 'semantic-format-tag-name
+   imenu-create-index-function 'semantic-create-imenu-index
+   ;; semantic-command-separation-character ";"
+   ;; Speedbar
+   ;; semantic-symbol->name-assoc-list
+   ;; '((graph . "Graph")
+   ;;   (digraph . "Directed Graph")
+   ;;   (node . "Node")
+   ;;   )
+   ;; Navigation
+   ;; senator-step-at-tag-classes '(graph digraph)
+   ))
+
+;;;###autoload
+(add-hook 'thrift-mode-hook 'wisent-dot-setup-parser)
 
 (provide 'thrift)
 
