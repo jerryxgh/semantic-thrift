@@ -21,18 +21,18 @@
 
 ;;; lexer
 ;; Strings identifier
-%type <symbol>      syntax "\\(\\sw\\|\\s_\\)+"
+%type <symbol>      ;; syntax "\\(\\sw\\|\\s_\\)+"
 %token <symbol>     tok_identifier
-%type <string>      syntax "\\s\"" matchdatatype sexp
+%type <string>      ;; syntax "\\s\"" matchdatatype sexp
 %token <string>     tok_literal
 
 ;; Constant values
-%type <number>      semantic-lex-number-expression
-%token <number> tok_int_constant "\\([+-]?[0-9]+\\|[+-]?0x[0-9A-Fa-f]+\\)"
-%token <number> tok_dub_constant "\\([+-]?[0-9]*\\(\.[0-9]+\\)?\\([eE][+-]?[0-9]+\\)?\\)"
+%type <number>      ;; semantic-lex-number-expression
+%token <number>     tok_int_constant "\\([+-]?[0-9]+\\|[+-]?0x[0-9A-Fa-f]+\\)" ;;
+%token <number>     tok_dub_constant "\\([+-]?[0-9]*\\(\.[0-9]+\\)?\\([eE][+-]?[0-9]+\\)?\\)"
 
 ;; Generate a keyword analyzer
-%type  <keyword> syntax "\\(\\sw\\|\\s_\\)+" matchdatatype keyword
+%type <keyword>     ;; syntax "\\(\\sw\\|\\s_\\)+" matchdatatype keyword
 
 ;; Header keywords
 %keyword tok_include		"include"

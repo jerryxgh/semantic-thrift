@@ -1,9 +1,9 @@
 ;;; thrift-wy.el --- Generated parser support file
 
-;; Copyright (C) 2022 Guanghui Xu
+;; Copyright (C) 2022 bytedance
 
-;; Author: Guanghui Xu <gh_xu@qq.com>
-;; Created: 2022-11-06 19:32:37+0800
+;; Author: bytedance <bytedance@C02FT0L6MD6V>
+;; Created: 2022-11-28 21:11:25+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -34,26 +34,74 @@
 
 ;;; Prologue
 ;;
+;; Stack of enum names in scope.
+  (defvar wisent-thrift-wy--enums nil)
 
 ;;; Declarations
 ;;
-(eval-and-compile (defconst thrift-wy--expected-conflicts
-                    nil
-                    "The number of expected shift/reduce conflicts in this grammar."))
+(eval-and-compile (defconst wisent-thrift-wy--expected-conflicts
+		    nil
+		    "The number of expected shift/reduce conflicts in this grammar."))
 
-(defconst thrift-wy--keyword-table
+(defconst wisent-thrift-wy--keyword-table
   (semantic-lex-make-keyword-table
-   '(("reference" . tok_reference))
+   '(("include" . tok_include)
+     ("namespace" . tok_namespace)
+     ("cpp_include" . tok_cpp_include)
+     ("cpp_type" . tok_cpp_type)
+     ("xsd_all" . tok_xsd_all)
+     ("xsd_optional" . tok_xsd_optional)
+     ("xsd_nillable" . tok_xsd_nillable)
+     ("xsd_attrs" . tok_xsd_attrs)
+     ("void" . tok_void)
+     ("bool" . tok_bool)
+     ("string" . tok_string)
+     ("binary" . tok_binary)
+     ("uuid" . tok_uuid)
+     ("byte" . tok_byte)
+     ("i8" . tok_i8)
+     ("i16" . tok_i16)
+     ("i32" . tok_i32)
+     ("i64" . tok_i64)
+     ("double" . tok_double)
+     ("map" . tok_map)
+     ("list" . tok_list)
+     ("set" . tok_set)
+     ("oneway" . tok_oneway)
+     ("async" . tok_async)
+     ("typedef" . tok_typedef)
+     ("struct" . tok_struct)
+     ("xception" . tok_xception)
+     ("throws" . tok_throws)
+     ("extends" . tok_extends)
+     ("service" . tok_service)
+     ("enum" . tok_enum)
+     ("const" . tok_const)
+     ("required" . tok_required)
+     ("optional" . tok_optional)
+     ("union" . tok_union)
+     ("reference" . tok_reference))
    'nil)
   "Table of language keywords.")
 
-(defconst thrift-wy--token-table
-  (semantic-lex-make-type-table 'nil 'nil)
+(defconst wisent-thrift-wy--token-table
+  (semantic-lex-make-type-table
+   '(("number"
+      (tok_dub_constant . "\\([+-]?[0-9]*\\(.[0-9]+\\)?\\([eE][+-]?[0-9]+\\)?\\)")
+      (tok_int_constant . "\\([+-]?[0-9]+\\|[+-]?0x[0-9A-Fa-f]+\\)"))
+     ("string"
+      (tok_literal))
+     ("symbol"
+      (tok_identifier)))
+   '(("keyword" :declared t)
+     ("number" :declared t)
+     ("string" :declared t)
+     ("symbol" :declared t)))
   "Table of lexical tokens.")
 
-(defconst thrift-wy--parse-table
+(defconst wisent-thrift-wy--parse-table
   (wisent-compiled-grammar
-   ((tok_reference)
+   ((tok_identifier tok_literal tok_int_constant tok_dub_constant tok_include tok_namespace tok_cpp_include tok_cpp_type tok_xsd_all tok_xsd_optional tok_xsd_nillable tok_xsd_attrs tok_void tok_bool tok_string tok_binary tok_uuid tok_byte tok_i8 tok_i16 tok_i32 tok_i64 tok_double tok_map tok_list tok_set tok_oneway tok_async tok_typedef tok_struct tok_xception tok_throws tok_extends tok_service tok_enum tok_const tok_required tok_optional tok_union tok_reference)
     nil
     (Program
      ((HeaderList DefinitionList)))
@@ -255,18 +303,18 @@
     (TypeAnnotationValue
      ((61 tok_literal))
      (nil)))
-   nil)
+   (Program))
   "Parser table.")
 
-(defun thrift-wy--install-parser ()
+(defun wisent-thrift-wy--install-parser ()
   "Setup the Semantic Parser."
   (semantic-install-function-overrides
    '((semantic-parse-stream . wisent-parse-stream)))
   (setq semantic-parser-name "LALR"
-        semantic--parse-table thrift-wy--parse-table
+        semantic--parse-table wisent-thrift-wy--parse-table
         semantic-debug-parser-source "thrift.wy"
-        semantic-flex-keywords-obarray thrift-wy--keyword-table
-        semantic-lex-types-obarray thrift-wy--token-table)
+        semantic-flex-keywords-obarray wisent-thrift-wy--keyword-table
+        semantic-lex-types-obarray wisent-thrift-wy--token-table)
   ;; Collect unmatched syntax lexical tokens
   (add-hook 'wisent-discarding-token-functions
             #'wisent-collect-unmatched-syntax nil t))
@@ -274,6 +322,28 @@
 
 ;;; Analyzers
 ;;
+(define-lex-regex-type-analyzer wisent-thrift-wy--<number>-regexp-analyzer
+  "regexp analyzer for <number> tokens."
+  semantic-lex-number-expression
+  '((tok_dub_constant . "\\([+-]?[0-9]*\\(.[0-9]+\\)?\\([eE][+-]?[0-9]+\\)?\\)")
+    (tok_int_constant . "\\([+-]?[0-9]+\\|[+-]?0x[0-9A-Fa-f]+\\)"))
+  'number)
+
+(define-lex-keyword-type-analyzer wisent-thrift-wy--<keyword>-keyword-analyzer
+  "keyword analyzer for <keyword> tokens."
+  "\\(\\sw\\|\\s_\\)+")
+
+(define-lex-sexp-type-analyzer wisent-thrift-wy--<string>-sexp-analyzer
+  "sexp analyzer for <string> tokens."
+  "\\s\""
+  'tok_literal)
+
+(define-lex-regex-type-analyzer wisent-thrift-wy--<symbol>-regexp-analyzer
+  "regexp analyzer for <symbol> tokens."
+  "\\(\\sw\\|\\s_\\)+"
+  nil
+  'tok_identifier)
+
 
 ;;; Epilogue
 ;;
