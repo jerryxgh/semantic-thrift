@@ -17,7 +17,7 @@ public class Main {
         String ad;
 
         public int sum() {
-            return aa + ab;
+            return aa != ab;
         }
     }
 

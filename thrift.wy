@@ -6,37 +6,103 @@
 ;;
 ;; It is based on the grammar for thrift version 0.17.0
 
-%{
-  ;; Stack of enum names in scope.
-  (defvar wisent-thrift-wy--enums nil)
-  }
-
 %package wisent-thrift-wy
 %provide thrift-wy
+
+%{
+(declare-function semantic-parse-region "semantic"
+                  (start end &optional nonterminal depth returnonerror))
+}
 
 %languagemode thrift-mode
 
 ;; The default goal.
 %start Program
+%start HeaderList
+%start Struct
 
 ;;; lexer
-;; Strings identifier
+%type <paren> syntax "\\([][{()}]\\)" matchdatatype string
+%token <paren> tok_lparen      "("
+%token <paren> tok_rparen      ")"
+%token <paren> tok_lbrace      "{"
+%token <paren> tok_rbrace      "}"
+%token <paren> tok_lbrack      "["
+%token <paren> tok_rbrack      "]"
+
+;; Operator terminals
+%type  <punctuation> ;;syntax "\\(\\s.\\|\\s$\\|\\s'\\)+" matchdatatype string
+
+%token <punctuation> tok_not         "!"
+%token <punctuation> tok_noteq       "!="
+%token <punctuation> tok_mod         "%"
+%token <punctuation> tok_modeq       "%="
+%token <punctuation> tok_and         "&"
+%token <punctuation> tok_andand      "&&"
+%token <punctuation> tok_andeq       "&="
+%token <punctuation> tok_mult        "*"
+%token <punctuation> tok_multeq      "*="
+%token <punctuation> tok_plus        "+"
+%token <punctuation> tok_plusplus    "++"
+%token <punctuation> tok_pluseq      "+="
+%token <punctuation> tok_comma       ","
+%token <punctuation> tok_minus       "-"
+%token <punctuation> tok_minusminus  "--"
+%token <punctuation> tok_minuseq     "-="
+%token <punctuation> tok_dot         "."
+%token <punctuation> tok_div         "/"
+%token <punctuation> tok_diveq       "/="
+%token <punctuation> tok_colon       ":"
+%token <punctuation> tok_semicolon   ";"
+%token <punctuation> tok_lt          "<"
+%token <punctuation> tok_lshift      "<<"
+%token <punctuation> tok_lshifteq    "<<="
+%token <punctuation> tok_lteq        "<="
+%token <punctuation> tok_eq          "="
+%token <punctuation> tok_eqeq        "=="
+%token <punctuation> tok_gt          ">"
+%token <punctuation> tok_gteq        ">="
+%token <punctuation> tok_rshift      ">>"
+%token <punctuation> tok_rshifteq    ">>="
+%token <punctuation> tok_urshift     ">>>"
+%token <punctuation> tok_urshifteq   ">>>="
+%token <punctuation> tok_question    "?"
+%token <punctuation> tok_xor         "^"
+%token <punctuation> tok_xoreq       "^="
+%token <punctuation> tok_or          "|"
+%token <punctuation> tok_oreq        "|="
+%token <punctuation> tok_oror        "||"
+%token <punctuation> tok_comp        "~"
+%token <punctuation> tok_ellipsis    "..."
+%token <punctuation> tok_at          "@"
+
+;; Constant values
+%type <int_constant> syntax "\\([+-]?[0-9]+\\)" matchdatatype regexp
+%token <int_constant> tok_int_constant
+%type <dub_constant> syntax "\\([+-]?[0-9]+\\(\.[0-9]+\\)?\\([eE][+-]?[0-9]+\\)?\\)" matchdatatype regexp
+%token <dub_constant> tok_dub_constant
+
+;; Literal terminals
 %type <symbol>      ;; syntax "\\(\\sw\\|\\s_\\)+"
+%token <symbol>     tok_boolean_literal "\\`false\\'"
+%token <symbol>     tok_boolean_literal "\\`true\\'"
 %token <symbol>     tok_identifier
+
 %type <string>      ;; syntax "\\s\"" matchdatatype sexp
 %token <string>     tok_literal
 
-;; Constant values
-%type <number>      ;; semantic-lex-number-expression
-%token <number>     tok_int_constant "\\([+-]?[0-9]+\\|[+-]?0x[0-9A-Fa-f]+\\)" ;;
-%token <number>     tok_dub_constant "\\([+-]?[0-9]*\\(\.[0-9]+\\)?\\([eE][+-]?[0-9]+\\)?\\)"
-
 ;; Generate a keyword analyzer
-%type <keyword>     ;; syntax "\\(\\sw\\|\\s_\\)+" matchdatatype keyword
+%type <keyword> ;; syntax "\\(\\sw\\|\\s_\\)+" matchdatatype keyword
 
 ;; Header keywords
 %keyword tok_include		"include"
+%put     tok_include summary
+"Include other thrift file: include \"name\""
+
 %keyword tok_namespace		"namespace"
+%put     tok_namespace summary
+"Namespace of current file"
+
 %keyword tok_cpp_include	"cpp_include"
 %keyword tok_cpp_type		"cpp_type"
 %keyword tok_xsd_all		"xsd_all"
@@ -69,6 +135,10 @@
 ;; Thrift language keywords
 %keyword tok_typedef		"typedef"
 %keyword tok_struct		"struct"
+
+%put     tok_struct summary
+"Define struct: struct {}"
+
 %keyword tok_xception		"xception"
 %keyword tok_throws		"throws"
 %keyword tok_extends		"extends"
@@ -108,7 +178,7 @@ HeaderList:
 Header:
     Include
   | tok_namespace tok_identifier tok_identifier TypeAnnotations
-  | tok_namespace '*' tok_identifier
+  | tok_namespace tok_mult tok_identifier
   | tok_cpp_include tok_literal
   ;
 
@@ -135,8 +205,8 @@ TypeDefinition:
   ;
 
 CommaOrSemicolonOptional:
-    ','
-  | ';'
+    tok_comma
+  | tok_semicolon
   | ;;EMPTY
   ;
 
@@ -145,7 +215,7 @@ Typedef:
   ;
 
 Enum:
-    tok_enum tok_identifier '{' EnumDefList '}' TypeAnnotations
+    tok_enum tok_identifier tok_lbrace EnumDefList tok_rbrace TypeAnnotations
   ;
 
 EnumDefList:
@@ -158,16 +228,17 @@ EnumDef:
   ;
 
 EnumValue:
-    tok_identifier '=' tok_int_constant
+    tok_identifier tok_eq tok_int_constant
   | tok_identifier
   ;
 
 Const:
-    tok_const FieldType tok_identifier '=' ConstValue CommaOrSemicolonOptional
+    tok_const FieldType tok_identifier tok_eq ConstValue CommaOrSemicolonOptional
   ;
 
 ConstValue:
     tok_int_constant
+  | tok_boolean_literal
   | tok_dub_constant
   | tok_literal
   | tok_identifier
@@ -176,7 +247,7 @@ ConstValue:
   ;
 
 ConstList:
-    '[' ConstListContents ']'
+    tok_lbrack ConstListContents tok_rbrack
   ;
 
 
@@ -186,11 +257,11 @@ ConstListContents:
   ;
 
 ConstMap:
-    '{' ConstMapContents '}'
+    tok_lbrace ConstMapContents tok_rbrace
   ;
 
 ConstMapContents:
-    ConstMapContents ConstValue ':' ConstValue CommaOrSemicolonOptional
+    ConstMapContents ConstValue tok_colon ConstValue CommaOrSemicolonOptional
   | ;;EMPTY
   ;
 
@@ -200,7 +271,7 @@ StructHead:
   ;
 
 Struct:
-    StructHead tok_identifier XsdAll '{' FieldList '}' TypeAnnotations
+    StructHead tok_identifier XsdAll tok_lbrace FieldList tok_rbrace TypeAnnotations
   ;
 
 XsdAll:
@@ -219,16 +290,16 @@ XsdNillable:
   ;
 
 XsdAttributes:
-    tok_xsd_attrs '{' FieldList '}'
+    tok_xsd_attrs tok_lbrace FieldList tok_rbrace
   | ;;EMPTY
   ;
 
 Xception:
-    tok_xception tok_identifier '{' FieldList '}' TypeAnnotations
+    tok_xception tok_identifier tok_lbrace FieldList tok_rbrace TypeAnnotations
   ;
 
 Service:
-    tok_service tok_identifier Extends '{' FlagArgs FunctionList UnflagArgs '}' TypeAnnotations
+    tok_service tok_identifier Extends tok_lbrace FlagArgs FunctionList UnflagArgs tok_rbrace TypeAnnotations
   ;
 
 FlagArgs:
@@ -248,7 +319,7 @@ FunctionList:
   ;
 
 Function:
-    CaptureDocText Oneway FunctionType tok_identifier '(' FieldList ')' Throws TypeAnnotations CommaOrSemicolonOptional
+    CaptureDocText Oneway FunctionType tok_identifier tok_lparen FieldList tok_rparen Throws TypeAnnotations CommaOrSemicolonOptional
   ;
 
 Oneway:
@@ -258,7 +329,7 @@ Oneway:
   ;
 
 Throws:
-    tok_throws '(' FieldList ')'
+    tok_throws tok_lparen FieldList tok_rparen
   | ;;EMPTY
   ;
 
@@ -311,7 +382,7 @@ FieldName:
 
 
 FieldIdentifier:
-    tok_int_constant ':'
+    tok_int_constant tok_colon
   | ;;EMPTY
   ;
 
@@ -327,7 +398,7 @@ FieldRequiredness:
   ;
 
 FieldValue:
-    '=' ConstValue
+    tok_eq ConstValue
   | ;;EMPTY
   ;
 
@@ -370,15 +441,15 @@ SimpleContainerType:
   ;
 
 MapType:
-    tok_map CppType '<' FieldType ',' FieldType '>'
+    tok_map CppType tok_lt FieldType tok_comma FieldType tok_gt
   ;
 
 SetType:
-    tok_set CppType '<' FieldType '>'
+    tok_set CppType tok_lt FieldType tok_gt
   ;
 
 ListType:
-    tok_list CppType '<' FieldType '>'
+    tok_list CppType tok_lt FieldType tok_gt
   ;
 
 CppType:
@@ -387,7 +458,7 @@ CppType:
   ;
 
 TypeAnnotations:
-    '(' TypeAnnotationList ')'
+    tok_lparen TypeAnnotationList tok_rparen
   | ;;EMPTY
   ;
 
@@ -401,7 +472,7 @@ TypeAnnotation:
   ;
 
 TypeAnnotationValue:
-    '=' tok_literal
+    tok_eq tok_literal
   | ;;EMPTY
   ;
 
@@ -415,11 +486,14 @@ It ignores whitespaces, newlines and comments."
   semantic-lex-ignore-newline
   semantic-lex-ignore-comments
   ;;;; Auto-generated analyzers.
-  wisent-thrift-wy--<number>-regexp-analyzer
+  wisent-thrift-wy--<int_constant>-regexp-analyzer
+  wisent-thrift-wy--<dub_constant>-regexp-analyzer
   wisent-thrift-wy--<string>-sexp-analyzer
   ;; Must detect keywords before other symbols
   wisent-thrift-wy--<keyword>-keyword-analyzer
   wisent-thrift-wy--<symbol>-regexp-analyzer
+  wisent-thrift-wy--<punctuation>-string-analyzer
+  wisent-thrift-wy--<paren>-string-analyzer
   ;;;;
   semantic-lex-default-action)
 
