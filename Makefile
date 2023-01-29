@@ -13,8 +13,8 @@ EMACS=emacs
 
 LOADPATH= ./
 
-wy_SEMANTIC_GRAMMAR=calc.wy java.wy thrift.wy
-languages_LISP=calc.el java.el thrift.el
+wy_SEMANTIC_GRAMMAR=thrift.wy
+languages_LISP=thrift.el
 VERSION=1.1beta
 
 .PHONY: all
@@ -32,11 +32,11 @@ wy: EMACSFLAGS+= --eval '(setq max-specpdl-size 1500 max-lisp-eval-depth 700)'
 %.elc: %.el
 	$(EMACS) $(EMACSFLAGS) $(addprefix -L ,$(LOADPATH)) --eval '(progn $(call require, $(PRELOADS)))' -f batch-byte-compile $^
 
-.PHONY: test
-test: wy
-test: PRELOADS=calc calc-wy
-test:
-	$(EMACS) $(EMACSFLAGS) $(addprefix -L ,$(LOADPATH)) --eval '(progn $(call require, $(PRELOADS)))' -f wisent-calc-utest $^
+# .PHONY: test
+# test: wy
+# test: PRELOADS=calc calc-wy
+# test:
+# 	$(EMACS) $(EMACSFLAGS) $(addprefix -L ,$(LOADPATH)) --eval '(progn $(call require, $(PRELOADS)))' -f wisent-calc-utest $^
 
 .PHONY: clean
 clean:

@@ -106,11 +106,13 @@ This function override `get-local-variables'."
 (defun wisent-thrift-default-setup ()
   "Hook run to setup Semantic in `thrift-mode'.
 Use the alternate LALR(1) parser."
+  (message "running_wisent-thrift-default-setup")
   (wisent-thrift-wy--install-parser)
   (setq
    ;; Lexical analysis
    semantic-lex-number-expression semantic-java-number-regexp
    semantic-lex-analyzer #'wisent-thrift-lexer
+   semantic-lex-syntax-table java-mode-syntax-table
    semantic-lex-comment-regex "\\(//[^\\n]*\\)\\|\\(#[^\n]*\\)"
    ;; Parsing
    ;; semantic-tag-expand-function #'semantic-java-expand-tag
@@ -134,8 +136,7 @@ Use the alternate LALR(1) parser."
    ;; senator-step-at-tag-classes '(function variable)
    ;; Remove 'recursive from the default semanticdb find throttle
    ;; since java imports never recurse.
-   semanticdb-find-default-throttle
-   (remq 'recursive (default-value 'semanticdb-find-default-throttle))
+   semanticdb-find-default-throttle (remq 'recursive (default-value 'semanticdb-find-default-throttle))
    ))
 
 (provide 'thrift-tags)

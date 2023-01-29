@@ -18,17 +18,44 @@
 
 ;; The default goal.
 %start Program
+;; Alternate entry points
+;;    - Needed by partial re-parse
 %start HeaderList
+%start Include
+%start DefinitionList
+%start Definition
+%start TypeDefinition
+%start Enum
+%start EnumBody
+%start EnumMemberDeclaration
 %start Struct
+%start StructBody
+%start Const
+%start ConstList
+%start ConstMap
+%start Service
+%start FunctionList
+%start Function
+%start FieldList
+%start Field
+;;    - Needed by EXPANDFULL clauses
+%start ConstListMemberDeclaration
+%start StructBodyMemberDeclaration
+%start ConstMapMemberDeclaration
 
-;;; lexer
-%type <paren> syntax "\\([][{()}]\\)" matchdatatype string
-%token <paren> tok_lparen      "("
-%token <paren> tok_rparen      ")"
-%token <paren> tok_lbrace      "{"
-%token <paren> tok_rbrace      "}"
-%token <paren> tok_lbrack      "["
-%token <paren> tok_rbrack      "]"
+;;; Block & Parenthesis terminals
+%type  <block>       ;;syntax "\\s(\\|\\s)" matchdatatype block
+
+%token <block>       ParenBlock "(tok_lparen tok_rparen)"
+%token <block>       BraceBlock "(tok_lbrace tok_rbrace)"
+%token <block>       BrackBlock "(tok_lbrack tok_rbrack)"
+
+%token <open-paren>  tok_lparen      "("
+%token <close-paren> tok_rparen      ")"
+%token <open-paren>  tok_lbrace      "{"
+%token <close-paren> tok_rbrace      "}"
+%token <open-paren>  tok_lbrack      "["
+%token <close-paren> tok_rbrack      "]"
 
 ;; Operator terminals
 %type  <punctuation> ;;syntax "\\(\\s.\\|\\s$\\|\\s'\\)+" matchdatatype string
@@ -104,51 +131,144 @@
 "Namespace of current file"
 
 %keyword tok_cpp_include	"cpp_include"
+%put     tok_cpp_include summary
+"Include cpp file: cpp_include \"name\""
+
 %keyword tok_cpp_type		"cpp_type"
+%put     tok_cpp_type summary
+"Cpp type"
+
 %keyword tok_xsd_all		"xsd_all"
+%put     tok_xsd_all summary
+"Xsd all"
+
 %keyword tok_xsd_optional	"xsd_optional"
+%put     tok_xsd_optional summary
+"Xsd optional"
+
 %keyword tok_xsd_nillable	"xsd_nillable"
+%put     tok_xsd_nillable summary
+"Xsd nillable"
+
 %keyword tok_xsd_attrs		"xsd_attrs"
+%put     tok_xsd_attrs summary
+"Xsd attrs"
 
 ;; Base datatype keywords
 %keyword tok_void		"void"
+%put     tok_void summary
+"Method return type: void <name> ..."
+
 %keyword tok_bool		"bool"
+%put     tok_bool summary
+"Primitive logical quantity type (true or false)"
+
 %keyword tok_string		"string"
+%put     tok_string summary
+"String type"
+
 %keyword tok_binary		"binary"
+%put     tok_binary summary
+"Binary type"
+
 %keyword tok_uuid		"uuid"
+%put     tok_uuid summary
+"Uuid type"
+
 %keyword tok_byte		"byte"
+%put     tok_byte summary
+"Byte type"
+
 %keyword tok_i8			"i8"
+%put     tok_i8 summary
+"I8 type"
+
 %keyword tok_i16		"i16"
+%put     tok_i16 summary
+"I16 type"
+
 %keyword tok_i32		"i32"
+%put     tok_i32 summary
+"I32 type"
+
 %keyword tok_i64		"i64"
+%put     tok_i64 summary
+"I64 type"
+
 %keyword tok_double		"double"
+%put     tok_double summary
+"Primitive floating-point type (double-precision 64-bit IEEE 754)"
 
 ;; Complex type keywords
 %keyword tok_map		"map"
+%put     tok_map summary
+"Key value map type"
+
 %keyword tok_list		"list"
+%put     tok_map summary
+"List type"
+
 %keyword tok_set		"set"
+%put     tok_set summary
+"Set type"
 
 ;; Function modifiers
 %keyword tok_oneway		"oneway"
+%put     tok_oneway summary
+"Oneway"
+
 %keyword tok_async		"async"
+%put     tok_async summary
+"Async"
 
 ;; Thrift language keywords
 %keyword tok_typedef		"typedef"
+%put     tok_typedef summary
+"Define type"
+
 %keyword tok_struct		"struct"
-
 %put     tok_struct summary
-"Define struct: struct {}"
+"Define struct: struct <name> {}"
 
-%keyword tok_xception		"xception"
+%keyword tok_exception		"exception"
+%put     tok_exception summary
+"Exception"
+
 %keyword tok_throws		"throws"
+%put     tok_throws summary
+"Throws"
+
 %keyword tok_extends		"extends"
+%put     tok_extends summary
+"Extends"
+
 %keyword tok_service		"service"
+%put     tok_service summary
+"Service"
+
 %keyword tok_enum		"enum"
+%put     tok_enum summary
+"Enum"
+
 %keyword tok_const		"const"
+%put     tok_const summary
+"Const"
+
 %keyword tok_required		"required"
+%put     tok_required summary
+"Required"
+
 %keyword tok_optional		"optional"
+%put     tok_optional summary
+"Optional"
+
 %keyword tok_union		"union"
+%put     tok_union summary
+"Union"
+
 %keyword tok_reference		"reference"
+%put     tok_reference summary
+"Reference"
 
 %%
 
@@ -157,196 +277,241 @@
 ;; For the most part this source file works its way top down from what you
 ;; might expect to find in a typical .thrift file, i.e. type definitions and
 ;; namespaces up top followed by service definitions using those types.
-Program:
-    HeaderList DefinitionList
+Program
+  : HeaderList DefinitionList
+  | HeaderList
+  | DefinitionList
   ;
 
-CaptureDocText:
-  ;
-
-DestroyDocText:
-  ;
-
-;; We have to DestroyDocText here, otherwise it catches the doctext
-;; on the first real element.
-HeaderList:
-    HeaderList DestroyDocText Header
-  | ;;EMPTY
+HeaderList
+  : HeaderList Header
   ;
 
 
-Header:
-    Include
+Header
+  : Include
   | tok_namespace tok_identifier tok_identifier TypeAnnotations
+    (PACKAGE-TAG $3 nil)
   | tok_namespace tok_mult tok_identifier
+    (PACKAGE-TAG $3 nil)
   | tok_cpp_include tok_literal
+    (INCLUDE-TAG $2 nil)
   ;
 
-Include:
-    tok_include tok_literal
+Include
+  : tok_include tok_literal
+    (INCLUDE-TAG $2 nil)
   ;
 
-DefinitionList:
-    DefinitionList CaptureDocText Definition
+DefinitionList
+  : DefinitionList Definition
   | ;;EMPTY
   ;
 
-Definition:
-    Const
+Definition
+  : Const
   | TypeDefinition
   | Service
   ;
 
-TypeDefinition:
-    Typedef
+TypeDefinition
+  : Typedef
   | Enum
   | Struct
   | Xception
   ;
 
-CommaOrSemicolonOptional:
-    tok_comma
+CommaOrSemicolonOptional
+  : tok_comma
+    ()
   | tok_semicolon
+    ()
   | ;;EMPTY
   ;
 
-Typedef:
-    tok_typedef FieldType tok_identifier TypeAnnotations CommaOrSemicolonOptional
+Typedef
+  : tok_typedef FieldType tok_identifier TypeAnnotations CommaOrSemicolonOptional
+    (TYPE-TAG $3 $2 nil nil)
   ;
 
-Enum:
-    tok_enum tok_identifier tok_lbrace EnumDefList tok_rbrace TypeAnnotations
+Enum
+  : tok_enum tok_identifier EnumBody TypeAnnotations
+    (TYPE-TAG $2 $1 $3 nil)
   ;
 
-EnumDefList:
-    EnumDefList EnumDef
-  | ;;EMPTY
+EnumBody
+  : BraceBlock
+    (EXPANDFULL $1 EnumMemberDeclaration)
   ;
 
-EnumDef:
-    CaptureDocText EnumValue TypeAnnotations CommaOrSemicolonOptional
+EnumMemberDeclaration
+  : tok_lbrace
+    ()
+  | tok_rbrace
+    ()
+  | EnumDef
+  | EnumDef tok_rbrace
   ;
 
-EnumValue:
-    tok_identifier tok_eq tok_int_constant
+EnumDef
+  : EnumValue TypeAnnotations CommaOrSemicolonOptional
+  ;
+
+EnumValue
+  : tok_identifier tok_eq tok_int_constant
+    (VARIABLE-TAG $1 nil $3)
   | tok_identifier
+    (VARIABLE-TAG $1 nil nil)
   ;
 
-Const:
-    tok_const FieldType tok_identifier tok_eq ConstValue CommaOrSemicolonOptional
+Const
+  : tok_const FieldType tok_identifier tok_eq ConstValue CommaOrSemicolonOptional
+    (VARIABLE-TAG $3 $2 $5)
   ;
 
-ConstValue:
-    tok_int_constant
+ConstValue
+  : tok_int_constant
   | tok_boolean_literal
   | tok_dub_constant
   | tok_literal
   | tok_identifier
+    (VARIABLE-TAG $1 nil nil)
   | ConstList
   | ConstMap
   ;
 
-ConstList:
-    tok_lbrack ConstListContents tok_rbrack
+ConstList
+  : BrackBlock
+    (EXPANDFULL $1 ConstListMemberDeclaration)
   ;
 
-
-ConstListContents:
-    ConstListContents ConstValue CommaOrSemicolonOptional
-  | ;;EMPTY
+ConstListMemberDeclaration
+  : tok_lbrack
+    ()
+  | tok_rbrack
+    ()
+  | ConstValue CommaOrSemicolonOptional
+  | ConstValue tok_rbrack
   ;
 
-ConstMap:
-    tok_lbrace ConstMapContents tok_rbrace
+ConstMap
+  : BraceBlock
+    (EXPANDFULL $1 ConstMapMemberDeclaration)
   ;
 
-ConstMapContents:
-    ConstMapContents ConstValue tok_colon ConstValue CommaOrSemicolonOptional
-  | ;;EMPTY
+ConstMapMemberDeclaration
+  : tok_lbrace
+    ()
+  | tok_rbrace
+    ()
+  | ConstValue tok_colon ConstValue CommaOrSemicolonOptional
+  | ConstValue tok_colon ConstValue tok_rbrace
   ;
 
-StructHead:
-    tok_struct
+StructHead
+  : tok_struct
   | tok_union
   ;
 
-Struct:
-    StructHead tok_identifier XsdAll tok_lbrace FieldList tok_rbrace TypeAnnotations
+Struct
+  : StructHead tok_identifier XsdAll StructBody TypeAnnotations
+    (TYPE-TAG $2 $1 $4 nil)
   ;
 
-XsdAll:
-    tok_xsd_all
+StructBody
+  : BraceBlock
+    (EXPANDFULL $1 StructBodyMemberDeclaration)
+  ;
+
+StructBodyMemberDeclaration
+  : tok_lbrace
+    ()
+  | tok_rbrace
+    ()
+  | FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
+    (VARIABLE-TAG $5 $3 nil :typemodifiers $2)
+  | FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations tok_rbrace
+    (VARIABLE-TAG $5 $3 nil :typemodifiers $2)
+  ;
+
+XsdAll
+  : tok_xsd_all
   | ;;EMPTY
   ;
 
-XsdOptional:
-    tok_xsd_optional
+XsdOptional
+  : tok_xsd_optional
+    (list $1)
   | ;;EMPTY
   ;
 
-XsdNillable:
-    tok_xsd_nillable
+XsdNillable
+  : tok_xsd_nillable
+    (list $1)
   | ;;EMPTY
   ;
 
-XsdAttributes:
-    tok_xsd_attrs tok_lbrace FieldList tok_rbrace
+XsdAttributes
+  : tok_xsd_attrs tok_lbrace FieldList tok_rbrace
   | ;;EMPTY
   ;
 
-Xception:
-    tok_xception tok_identifier tok_lbrace FieldList tok_rbrace TypeAnnotations
+Xception
+  : tok_exception tok_identifier tok_lbrace FieldList tok_rbrace TypeAnnotations
   ;
 
-Service:
-    tok_service tok_identifier Extends tok_lbrace FlagArgs FunctionList UnflagArgs tok_rbrace TypeAnnotations
+Service
+  : tok_service tok_identifier Extends tok_lbrace FlagArgs FunctionList UnflagArgs tok_rbrace TypeAnnotations
   ;
 
-FlagArgs:
+FlagArgs
+  :
   ;
 
-UnflagArgs:
+UnflagArgs
+  :
   ;
 
-Extends:
-    tok_extends tok_identifier
+Extends
+  : tok_extends tok_identifier
   | ;;EMPTY
   ;
 
-FunctionList:
-    FunctionList Function
+FunctionList
+  : FunctionList Function
   | ;;EMPTY
   ;
 
-Function:
-    CaptureDocText Oneway FunctionType tok_identifier tok_lparen FieldList tok_rparen Throws TypeAnnotations CommaOrSemicolonOptional
+Function
+  : Oneway FunctionType tok_identifier tok_lparen FieldList tok_rparen Throws TypeAnnotations CommaOrSemicolonOptional
   ;
 
-Oneway:
-    tok_oneway
+Oneway
+  : tok_oneway
   |  tok_async  ;; deprecated
   | ;;EMPTY
   ;
 
-Throws:
-    tok_throws tok_lparen FieldList tok_rparen
+Throws
+  : tok_throws tok_lparen FieldList tok_rparen
   | ;;EMPTY
   ;
 
-FieldList:
-    FieldList Field
+FieldList
+  : FieldList Field
   | ;;EMPTY
   ;
 
-Field:
-    CaptureDocText FieldIdentifier FieldRequiredness FieldType FieldReference FieldName FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
+Field
+  : FieldIdentifier FieldRequiredness FieldType FieldReference FieldName FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
   ;
 
 ;; identifiers and everything that could be one if it would not be identified as
 ;; a different token already and excluding the "xsd*" keywords to follow a
 ;; FieldName
-FieldName:
-    tok_identifier
+FieldName
+  : tok_identifier
+    (VARIABLE-TAG $1 nil nil)
   | tok_namespace
   | tok_cpp_include
   | tok_cpp_type
@@ -370,7 +535,7 @@ FieldName:
   | tok_typedef
   | tok_struct
   | tok_union
-  | tok_xception
+  | tok_exception
   | tok_extends
   | tok_throws
   | tok_service
@@ -381,44 +546,49 @@ FieldName:
   ;
 
 
-FieldIdentifier:
-    tok_int_constant tok_colon
+FieldIdentifier
+  : tok_int_constant tok_colon
   | ;;EMPTY
   ;
 
-FieldReference:
-    tok_reference
+FieldReference
+  : tok_reference
+    (list $1)
   | ;;EMPTY
   ;
 
-FieldRequiredness:
-    tok_required
+FieldRequiredness
+  : tok_required
+    (list $1)
   | tok_optional
+    (list $1)
   | ;;EMPTY
   ;
 
-FieldValue:
-    tok_eq ConstValue
+FieldValue
+  : tok_eq ConstValue
   | ;;EMPTY
   ;
 
-FunctionType:
-    FieldType
+FunctionType
+  : FieldType
   | tok_void
   ;
 
-FieldType:
-    tok_identifier
+FieldType
+  : tok_identifier
+    (identity $1)
   | BaseType
   | ContainerType
   ;
 
-BaseType:
-    SimpleBaseType TypeAnnotations
+BaseType
+  : SimpleBaseType TypeAnnotations
+    (concat $1 $2)
   ;
 
-SimpleBaseType:
-    tok_string
+SimpleBaseType
+  : tok_string
   | tok_binary
   | tok_uuid
   | tok_bool
@@ -430,49 +600,54 @@ SimpleBaseType:
   | tok_double
   ;
 
-ContainerType:
-    SimpleContainerType TypeAnnotations
+ContainerType
+  : SimpleContainerType TypeAnnotations
+    (concat $1 $2)
   ;
 
-SimpleContainerType:
-    MapType
+SimpleContainerType
+  : MapType
   | SetType
   | ListType
   ;
 
-MapType:
-    tok_map CppType tok_lt FieldType tok_comma FieldType tok_gt
+MapType
+  : tok_map CppType tok_lt FieldType tok_comma FieldType tok_gt
   ;
 
-SetType:
-    tok_set CppType tok_lt FieldType tok_gt
+SetType
+  : tok_set CppType tok_lt FieldType tok_gt
   ;
 
-ListType:
-    tok_list CppType tok_lt FieldType tok_gt
+ListType
+  : tok_list CppType tok_lt FieldType tok_gt
   ;
 
-CppType:
-    tok_cpp_type tok_literal
+CppType
+  : tok_cpp_type tok_literal
+    (concat $1 $2)
   | ;;EMPTY
   ;
 
-TypeAnnotations:
-    tok_lparen TypeAnnotationList tok_rparen
+TypeAnnotations
+  : tok_lparen TypeAnnotationList tok_rparen
   | ;;EMPTY
   ;
 
-TypeAnnotationList:
-    TypeAnnotationList TypeAnnotation
+TypeAnnotationList
+  : TypeAnnotationList TypeAnnotation
+    (cons $2 $1)
   | ;;EMPTY
   ;
 
-TypeAnnotation:
-    tok_identifier TypeAnnotationValue CommaOrSemicolonOptional
+TypeAnnotation
+  : tok_identifier TypeAnnotationValue CommaOrSemicolonOptional
+    (concat $1 $2)
   ;
 
-TypeAnnotationValue:
-    tok_eq tok_literal
+TypeAnnotationValue
+  : tok_eq tok_literal
+    (list $2)
   | ;;EMPTY
   ;
 
@@ -493,7 +668,7 @@ It ignores whitespaces, newlines and comments."
   wisent-thrift-wy--<keyword>-keyword-analyzer
   wisent-thrift-wy--<symbol>-regexp-analyzer
   wisent-thrift-wy--<punctuation>-string-analyzer
-  wisent-thrift-wy--<paren>-string-analyzer
+  wisent-thrift-wy--<block>-block-analyzer
   ;;;;
   semantic-lex-default-action)
 
