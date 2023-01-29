@@ -20,25 +20,10 @@
 %start Program
 ;; Alternate entry points
 ;;    - Needed by partial re-parse
-%start HeaderList
-%start Include
-%start DefinitionList
+%start Header
 %start Definition
-%start TypeDefinition
-%start Enum
-%start EnumBody
-%start EnumMemberDeclaration
-%start Struct
-%start StructBody
-%start Const
-%start ConstList
-%start ConstMap
-%start Service
-%start FunctionList
-%start Function
-%start FieldList
-%start Field
 ;;    - Needed by EXPANDFULL clauses
+%start EnumMemberDeclaration
 %start ConstListMemberDeclaration
 %start StructBodyMemberDeclaration
 %start ConstMapMemberDeclaration
@@ -278,34 +263,29 @@
 ;; might expect to find in a typical .thrift file, i.e. type definitions and
 ;; namespaces up top followed by service definitions using those types.
 Program
-  : HeaderList DefinitionList
-  | HeaderList
-  | DefinitionList
+  : Header
+  | Definition
   ;
-
-HeaderList
-  : HeaderList Header
-  ;
-
 
 Header
   : Include
-  | tok_namespace tok_identifier tok_identifier TypeAnnotations
-    (PACKAGE-TAG $3 nil)
-  | tok_namespace tok_mult tok_identifier
-    (PACKAGE-TAG $3 nil)
+  | tok_namespace tok_identifier TokWithDot TypeAnnotations
+    (PACKAGE-TAG $3 $2)
+  | tok_namespace tok_mult TokWithDot
+    (PACKAGE-TAG $3 $2)
   | tok_cpp_include tok_literal
     (INCLUDE-TAG $2 nil)
+  ;
+
+TokWithDot
+  : TokWithDot tok_dot tok_identifier
+    (concat $1 $2 $3)
+  | tok_identifier
   ;
 
 Include
   : tok_include tok_literal
     (INCLUDE-TAG $2 nil)
-  ;
-
-DefinitionList
-  : DefinitionList Definition
-  | ;;EMPTY
   ;
 
 Definition
@@ -330,12 +310,12 @@ CommaOrSemicolonOptional
   ;
 
 Typedef
-  : tok_typedef FieldType tok_identifier TypeAnnotations CommaOrSemicolonOptional
+  : tok_typedef FieldType TokWithDot TypeAnnotations CommaOrSemicolonOptional
     (TYPE-TAG $3 $2 nil nil)
   ;
 
 Enum
-  : tok_enum tok_identifier EnumBody TypeAnnotations
+  : tok_enum TokWithDot EnumBody TypeAnnotations
     (TYPE-TAG $2 $1 $3 nil)
   ;
 
@@ -414,8 +394,8 @@ StructHead
   ;
 
 Struct
-  : StructHead tok_identifier StructBody
-    (TYPE-TAG $2 $1 $3 nil)
+  : StructHead tok_identifier XsdAll StructBody TypeAnnotations
+    (TYPE-TAG $2 $1 $4 nil)
   ;
 
 StructBody
@@ -428,10 +408,10 @@ StructBodyMemberDeclaration
     ()
   | tok_rbrace
     ()
-  | FieldIdentifier FieldRequiredness FieldType tok_identifier CommaOrSemicolonOptional
-    (VARIABLE-TAG $4 $3 nil :typemodifiers $2)
-  | FieldIdentifier FieldRequiredness FieldType tok_identifier tok_rbrace
-    (VARIABLE-TAG $4 $3 nil :typemodifiers $2)
+  | FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
+    (VARIABLE-TAG $5 $3 nil :typemodifiers $2)
+  | FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations tok_rbrace
+    (VARIABLE-TAG $5 $3 nil :typemodifiers $2)
   ;
 
 XsdAll
@@ -553,7 +533,6 @@ FieldIdentifier
 
 FieldReference
   : tok_reference
-    (list $1)
   | ;;EMPTY
   ;
 
@@ -576,6 +555,8 @@ FunctionType
 FieldType
   : tok_identifier
     (identity $1)
+  | tok_identifier tok_dot tok_identifier
+    (identity $3)
   | BaseType
   | ContainerType
   ;

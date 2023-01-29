@@ -35,6 +35,7 @@
 
 (require 'semantic/wisent)
 (require 'semantic/ctxt)
+(require 'semantic/tag-file)
 (require 'semantic/java)
 (require 'thrift-wy)
 (require 'thrift)
@@ -57,43 +58,52 @@ MSG is the message string to report."
 ;;;; Local context
 ;;;;
 
-(define-mode-local-override semantic-get-local-variables
-  thrift-mode ()
-  "Get local values from a specific context.
-Parse the current context for `field_declaration' nonterminals to
-collect tags, such as local variables or prototypes.
-This function override `get-local-variables'."
-  (let ((vars nil)
-        (ct (semantic-current-tag))
-        ;; We want nothing to do with funny syntaxing while doing this.
-        (semantic-unmatched-syntax-hook nil))
-    (while (not (semantic-up-context (point) 'function))
-      (save-excursion
-        (forward-char 1)
-        (setq vars
-              (append (semantic-parse-region
-                       (point)
-                       (save-excursion (semantic-end-of-context) (point))
-                       'field_declaration
-                       0 t)
-                      vars))))
-    vars))
+;; (define-mode-local-override semantic-get-local-variables
+;;   thrift-mode ()
+;;   "Get local values from a specific context.
+;; Parse the current context for `field_declaration' nonterminals to
+;; collect tags, such as local variables or prototypes.
+;; This function override `get-local-variables'."
+;;   (let ((vars nil)
+;;         (ct (semantic-current-tag))
+;;         ;; We want nothing to do with funny syntaxing while doing this.
+;;         (semantic-unmatched-syntax-hook nil))
+;;     (while (not (semantic-up-context (point) 'function))
+;;       (save-excursion
+;;         (forward-char 1)
+;;         (setq vars
+;;               (append (semantic-parse-region
+;;                        (point)
+;;                        (save-excursion (semantic-end-of-context) (point))
+;;                        'field_declaration
+;;                        0 t)
+;;                       vars))))
+;;     vars))
 
 ;;;
 ;;; Analyzer and type cache support
 ;;;
-(define-mode-local-override semantic-analyze-split-name thrift-mode (name)
-  "Split up tag names on colon . boundaries."
-  (let ((ans (split-string name "\\.")))
-    (if (= (length ans) 1)
-        name
-      (delete "" ans))))
+;; (define-mode-local-override semantic-analyze-split-name thrift-mode (name)
+;;   "Split up tag names on colon . boundaries."
+;;   (let ((ans (split-string name "\\.")))
+;;     (if (= (length ans) 1)
+;;         name
+;;       (delete "" ans))))
 
-(define-mode-local-override semantic-analyze-unsplit-name thrift-mode (namelist)
-  "Assemble the list of names NAMELIST into a namespace name."
-  (mapconcat #'identity namelist "."))
+;; (define-mode-local-override semantic-analyze-unsplit-name thrift-mode (namelist)
+;;   "Assemble the list of names NAMELIST into a namespace name."
+;;   (mapconcat #'identity namelist "."))
 
+(define-mode-local-override semantic-dependency-tag-file thrift-mode (tag)
+  "Find the filename represented from TAG."
+  (unless (semantic-tag-of-class-p tag 'include)
+    (signal 'wrong-type-argument (list tag 'include)))
 
+  (let ((tfile (semantic-tag-include-filename tag)))
+    (if (and (string-prefix-p "\"" tfile) (string-suffix-p "\"" tfile))
+        (expand-file-name (substring tfile 1 -1) (file-name-directory (semantic-tag-file-name tag)))
+        (expand-file-name tfile (file-name-directory (semantic-tag-file-name tag)))
+      )))
 
 ;;;;
 ;;;; Semantic integration of the Java LALR parser

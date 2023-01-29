@@ -3,7 +3,7 @@
 ;; Copyright (C) 2023 bytedance
 
 ;; Author: bytedance <bytedance@C02FT0L6MD6V>
-;; Created: 2023-01-29 11:59:29+0800
+;; Created: 2023-01-29 20:07:12+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -204,29 +204,27 @@
    ((ParenBlock BraceBlock BrackBlock tok_lparen tok_rparen tok_lbrace tok_rbrace tok_lbrack tok_rbrack tok_not tok_noteq tok_mod tok_modeq tok_and tok_andand tok_andeq tok_mult tok_multeq tok_plus tok_plusplus tok_pluseq tok_comma tok_minus tok_minusminus tok_minuseq tok_dot tok_div tok_diveq tok_colon tok_semicolon tok_lt tok_lshift tok_lshifteq tok_lteq tok_eq tok_eqeq tok_gt tok_gteq tok_rshift tok_rshifteq tok_urshift tok_urshifteq tok_question tok_xor tok_xoreq tok_or tok_oreq tok_oror tok_comp tok_ellipsis tok_at tok_int_constant tok_dub_constant tok_boolean_literal tok_identifier tok_literal tok_include tok_namespace tok_cpp_include tok_cpp_type tok_xsd_all tok_xsd_optional tok_xsd_nillable tok_xsd_attrs tok_void tok_bool tok_string tok_binary tok_uuid tok_byte tok_i8 tok_i16 tok_i32 tok_i64 tok_double tok_map tok_list tok_set tok_oneway tok_async tok_typedef tok_struct tok_exception tok_throws tok_extends tok_service tok_enum tok_const tok_required tok_optional tok_union tok_reference)
     nil
     (Program
-     ((HeaderList DefinitionList))
-     ((HeaderList))
-     ((DefinitionList)))
-    (HeaderList
-     ((HeaderList Header)))
+     ((Header))
+     ((Definition)))
     (Header
      ((Include))
-     ((tok_namespace tok_identifier tok_identifier TypeAnnotations)
+     ((tok_namespace tok_identifier TokWithDot TypeAnnotations)
       (wisent-raw-tag
-       (semantic-tag-new-package $3 nil)))
-     ((tok_namespace tok_mult tok_identifier)
+       (semantic-tag-new-package $3 $2)))
+     ((tok_namespace tok_mult TokWithDot)
       (wisent-raw-tag
-       (semantic-tag-new-package $3 nil)))
+       (semantic-tag-new-package $3 $2)))
      ((tok_cpp_include tok_literal)
       (wisent-raw-tag
        (semantic-tag-new-include $2 nil))))
+    (TokWithDot
+     ((TokWithDot tok_dot tok_identifier)
+      (concat $1 $2 $3))
+     ((tok_identifier)))
     (Include
      ((tok_include tok_literal)
       (wisent-raw-tag
        (semantic-tag-new-include $2 nil))))
-    (DefinitionList
-      ((DefinitionList Definition))
-      (nil))
     (Definition
       ((Const))
       ((TypeDefinition))
@@ -243,11 +241,11 @@
       nil)
      (nil))
     (Typedef
-     ((tok_typedef FieldType tok_identifier TypeAnnotations CommaOrSemicolonOptional)
+     ((tok_typedef FieldType TokWithDot TypeAnnotations CommaOrSemicolonOptional)
       (wisent-raw-tag
        (semantic-tag-new-type $3 $2 nil nil))))
     (Enum
-     ((tok_enum tok_identifier EnumBody TypeAnnotations)
+     ((tok_enum TokWithDot EnumBody TypeAnnotations)
       (wisent-raw-tag
        (semantic-tag-new-type $2 $1 $3 nil))))
     (EnumBody
@@ -316,9 +314,9 @@
      ((tok_struct))
      ((tok_union)))
     (Struct
-     ((StructHead tok_identifier StructBody)
+     ((StructHead tok_identifier XsdAll StructBody TypeAnnotations)
       (wisent-raw-tag
-       (semantic-tag-new-type $2 $1 $3 nil))))
+       (semantic-tag-new-type $2 $1 $4 nil))))
     (StructBody
      ((BraceBlock)
       (semantic-parse-region
@@ -330,12 +328,12 @@
       nil)
      ((tok_rbrace)
       nil)
-     ((FieldIdentifier FieldRequiredness FieldType tok_identifier CommaOrSemicolonOptional)
+     ((FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional)
       (wisent-raw-tag
-       (semantic-tag-new-variable $4 $3 nil :typemodifiers $2)))
-     ((FieldIdentifier FieldRequiredness FieldType tok_identifier tok_rbrace)
+       (semantic-tag-new-variable $5 $3 nil :typemodifiers $2)))
+     ((FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations tok_rbrace)
       (wisent-raw-tag
-       (semantic-tag-new-variable $4 $3 nil :typemodifiers $2))))
+       (semantic-tag-new-variable $5 $3 nil :typemodifiers $2))))
     (XsdAll
      ((tok_xsd_all))
      (nil))
@@ -417,8 +415,7 @@
      ((tok_int_constant tok_colon))
      (nil))
     (FieldReference
-     ((tok_reference)
-      (list $1))
+     ((tok_reference))
      (nil))
     (FieldRequiredness
      ((tok_required))
@@ -433,6 +430,8 @@
     (FieldType
      ((tok_identifier)
       (identity $1))
+     ((tok_identifier tok_dot tok_identifier)
+      (identity $3))
      ((BaseType))
      ((ContainerType)))
     (BaseType
@@ -480,7 +479,7 @@
      ((tok_eq tok_literal)
       (list $2))
      (nil)))
-   (Program HeaderList Include DefinitionList Definition TypeDefinition Enum EnumBody EnumMemberDeclaration Struct StructBody Const ConstList ConstMap Service FunctionList Function FieldList Field ConstListMemberDeclaration StructBodyMemberDeclaration ConstMapMemberDeclaration))
+   (Program Header Definition EnumMemberDeclaration ConstListMemberDeclaration StructBodyMemberDeclaration ConstMapMemberDeclaration))
   "Parser table.")
 
 (defun wisent-thrift-wy--install-parser ()

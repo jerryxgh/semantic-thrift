@@ -13,8 +13,8 @@ EMACS=emacs
 
 LOADPATH= ./
 
+# wy_SEMANTIC_GRAMMAR=java.wy java-tags.wy thrift.wy
 wy_SEMANTIC_GRAMMAR=thrift.wy
-languages_LISP=thrift.el
 VERSION=1.1beta
 
 .PHONY: all
@@ -28,7 +28,7 @@ wy: $(addsuffix -wy.elc, $(basename $(wy_SEMANTIC_GRAMMAR)))
 wy: $(addsuffix -wy.el, $(basename $(wy_SEMANTIC_GRAMMAR)))
 wy: PRELOADS=semantic/grammar semantic/bovine/grammar semantic/wisent/grammar
 
-wy: EMACSFLAGS+= --eval '(setq max-specpdl-size 1500 max-lisp-eval-depth 700)'
+wy: EMACSFLAGS+= --eval '(setq max-specpdl-size 1500 max-lisp-eval-depth 700 wisent-verbose-flag t)'
 %.elc: %.el
 	$(EMACS) $(EMACSFLAGS) $(addprefix -L ,$(LOADPATH)) --eval '(progn $(call require, $(PRELOADS)))' -f batch-byte-compile $^
 
@@ -40,6 +40,6 @@ wy: EMACSFLAGS+= --eval '(setq max-specpdl-size 1500 max-lisp-eval-depth 700)'
 
 .PHONY: clean
 clean:
-	rm -f *-by.el *-wy.el *.elc
+	rm -f *-by.el *-wy.el *.elc wisent.output
 
 # End of Makefile
