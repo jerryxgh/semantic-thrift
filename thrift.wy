@@ -414,8 +414,8 @@ StructHead
   ;
 
 Struct
-  : StructHead tok_identifier XsdAll StructBody TypeAnnotations
-    (TYPE-TAG $2 $1 $4 nil)
+  : StructHead tok_identifier StructBody
+    (TYPE-TAG $2 $1 $3 nil)
   ;
 
 StructBody
@@ -428,10 +428,10 @@ StructBodyMemberDeclaration
     ()
   | tok_rbrace
     ()
-  | FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
-    (VARIABLE-TAG $5 $3 nil :typemodifiers $2)
-  | FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations tok_rbrace
-    (VARIABLE-TAG $5 $3 nil :typemodifiers $2)
+  | FieldIdentifier FieldRequiredness FieldType tok_identifier CommaOrSemicolonOptional
+    (VARIABLE-TAG $4 $3 nil :typemodifiers $2)
+  | FieldIdentifier FieldRequiredness FieldType tok_identifier tok_rbrace
+    (VARIABLE-TAG $4 $3 nil :typemodifiers $2)
   ;
 
 XsdAll
@@ -559,9 +559,7 @@ FieldReference
 
 FieldRequiredness
   : tok_required
-    (list $1)
   | tok_optional
-    (list $1)
   | ;;EMPTY
   ;
 

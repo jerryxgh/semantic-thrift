@@ -3,7 +3,7 @@
 ;; Copyright (C) 2023 bytedance
 
 ;; Author: bytedance <bytedance@C02FT0L6MD6V>
-;; Created: 2023-01-29 11:54:17+0800
+;; Created: 2023-01-29 11:59:29+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -316,9 +316,9 @@
      ((tok_struct))
      ((tok_union)))
     (Struct
-     ((StructHead tok_identifier XsdAll StructBody TypeAnnotations)
+     ((StructHead tok_identifier StructBody)
       (wisent-raw-tag
-       (semantic-tag-new-type $2 $1 $4 nil))))
+       (semantic-tag-new-type $2 $1 $3 nil))))
     (StructBody
      ((BraceBlock)
       (semantic-parse-region
@@ -330,12 +330,12 @@
       nil)
      ((tok_rbrace)
       nil)
-     ((FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional)
+     ((FieldIdentifier FieldRequiredness FieldType tok_identifier CommaOrSemicolonOptional)
       (wisent-raw-tag
-       (semantic-tag-new-variable $5 $3 nil :typemodifiers $2)))
-     ((FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations tok_rbrace)
+       (semantic-tag-new-variable $4 $3 nil :typemodifiers $2)))
+     ((FieldIdentifier FieldRequiredness FieldType tok_identifier tok_rbrace)
       (wisent-raw-tag
-       (semantic-tag-new-variable $5 $3 nil :typemodifiers $2))))
+       (semantic-tag-new-variable $4 $3 nil :typemodifiers $2))))
     (XsdAll
      ((tok_xsd_all))
      (nil))
@@ -421,10 +421,8 @@
       (list $1))
      (nil))
     (FieldRequiredness
-     ((tok_required)
-      (list $1))
-     ((tok_optional)
-      (list $1))
+     ((tok_required))
+     ((tok_optional))
      (nil))
     (FieldValue
      ((tok_eq ConstValue))
