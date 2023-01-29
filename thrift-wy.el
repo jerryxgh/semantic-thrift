@@ -1,9 +1,9 @@
 ;;; thrift-wy.el --- Generated parser support file
 
-;; Copyright (C) 2023 bytedance
+;; Copyright (C) 2023 胡丹丹
 
-;; Author: bytedance <bytedance@C02FT0L6MD6V>
-;; Created: 2023-01-29 20:07:12+0800
+;; Author: 胡丹丹 <hudandan@hudandandeMBP>
+;; Created: 2023-01-30 00:16:53+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -330,10 +330,10 @@
       nil)
      ((FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional)
       (wisent-raw-tag
-       (semantic-tag-new-variable $5 $3 nil :typemodifiers $2)))
+       (semantic-tag-new-variable $5 $3 nil)))
      ((FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations tok_rbrace)
       (wisent-raw-tag
-       (semantic-tag-new-variable $5 $3 nil :typemodifiers $2))))
+       (semantic-tag-new-variable $5 $3 nil))))
     (XsdAll
      ((tok_xsd_all))
      (nil))
@@ -428,10 +428,10 @@
      ((FieldType))
      ((tok_void)))
     (FieldType
-     ((tok_identifier)
-      (identity $1))
      ((tok_identifier tok_dot tok_identifier)
       (identity $3))
+     ((tok_identifier)
+      (identity $1))
      ((BaseType))
      ((ContainerType)))
     (BaseType

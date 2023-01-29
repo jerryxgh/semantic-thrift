@@ -409,9 +409,9 @@ StructBodyMemberDeclaration
   | tok_rbrace
     ()
   | FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
-    (VARIABLE-TAG $5 $3 nil :typemodifiers $2)
+    (VARIABLE-TAG $5 $3 nil)
   | FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations tok_rbrace
-    (VARIABLE-TAG $5 $3 nil :typemodifiers $2)
+    (VARIABLE-TAG $5 $3 nil)
   ;
 
 XsdAll
@@ -553,10 +553,10 @@ FunctionType
   ;
 
 FieldType
-  : tok_identifier
-    (identity $1)
-  | tok_identifier tok_dot tok_identifier
+  : tok_identifier tok_dot tok_identifier
     (identity $3)
+  | tok_identifier
+    (identity $1)
   | BaseType
   | ContainerType
   ;

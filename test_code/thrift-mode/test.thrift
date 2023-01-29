@@ -4,7 +4,7 @@ namespace java thrift.test
 include "sub/included.thrift"
 
 struct Fruit {
-    1: required i64 a
+    1: optional i64 a
     2: i64 b
     3: i32 c
     4: string d
