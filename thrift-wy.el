@@ -1,9 +1,9 @@
 ;;; thrift-wy.el --- Generated parser support file
 
-;; Copyright (C) 2023 bytedance
+;; Copyright (C) 2023 胡丹丹
 
-;; Author: bytedance <bytedance@C02FT0L6MD6V>
-;; Created: 2023-01-30 17:18:01+0800
+;; Author: 胡丹丹 <hudandan@hudandandeMBP>
+;; Created: 2023-01-30 23:21:59+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -127,10 +127,8 @@
       (tok_identifier)
       (tok_boolean_literal . "\\`true\\'")
       (tok_boolean_literal . "\\`false\\'"))
-     ("dub_constant"
-      (tok_dub_constant))
-     ("int_constant"
-      (tok_int_constant))
+     ("number"
+      (tok_number_constant))
      ("punctuation"
       (tok_at . "@")
       (tok_ellipsis . "...")
@@ -189,19 +187,14 @@
    '(("keyword" :declared t)
      ("string" :declared t)
      ("symbol" :declared t)
-     ("dub_constant" syntax "\\([+-]?[0-9]+\\(.[0-9]+\\)?\\([eE][+-]?[0-9]+\\)?\\)")
-     ("dub_constant" matchdatatype regexp)
-     ("dub_constant" :declared t)
-     ("int_constant" syntax "\\([+-]?[0-9]+\\)")
-     ("int_constant" matchdatatype regexp)
-     ("int_constant" :declared t)
+     ("number" :declared t)
      ("punctuation" :declared t)
      ("block" :declared t)))
   "Table of lexical tokens.")
 
 (defconst wisent-thrift-wy--parse-table
   (wisent-compiled-grammar
-   ((ParenBlock BraceBlock BrackBlock tok_lparen tok_rparen tok_lbrace tok_rbrace tok_lbrack tok_rbrack tok_not tok_noteq tok_mod tok_modeq tok_and tok_andand tok_andeq tok_mult tok_multeq tok_plus tok_plusplus tok_pluseq tok_comma tok_minus tok_minusminus tok_minuseq tok_dot tok_div tok_diveq tok_colon tok_semicolon tok_lt tok_lshift tok_lshifteq tok_lteq tok_eq tok_eqeq tok_gt tok_gteq tok_rshift tok_rshifteq tok_urshift tok_urshifteq tok_question tok_xor tok_xoreq tok_or tok_oreq tok_oror tok_comp tok_ellipsis tok_at tok_int_constant tok_dub_constant tok_boolean_literal tok_identifier tok_literal tok_include tok_namespace tok_cpp_include tok_cpp_type tok_xsd_all tok_xsd_optional tok_xsd_nillable tok_xsd_attrs tok_void tok_bool tok_string tok_binary tok_uuid tok_byte tok_i8 tok_i16 tok_i32 tok_i64 tok_double tok_map tok_list tok_set tok_oneway tok_async tok_typedef tok_struct tok_exception tok_throws tok_extends tok_service tok_enum tok_const tok_required tok_optional tok_union tok_reference)
+   ((ParenBlock BraceBlock BrackBlock tok_lparen tok_rparen tok_lbrace tok_rbrace tok_lbrack tok_rbrack tok_not tok_noteq tok_mod tok_modeq tok_and tok_andand tok_andeq tok_mult tok_multeq tok_plus tok_plusplus tok_pluseq tok_comma tok_minus tok_minusminus tok_minuseq tok_dot tok_div tok_diveq tok_colon tok_semicolon tok_lt tok_lshift tok_lshifteq tok_lteq tok_eq tok_eqeq tok_gt tok_gteq tok_rshift tok_rshifteq tok_urshift tok_urshifteq tok_question tok_xor tok_xoreq tok_or tok_oreq tok_oror tok_comp tok_ellipsis tok_at tok_number_constant tok_boolean_literal tok_identifier tok_literal tok_include tok_namespace tok_cpp_include tok_cpp_type tok_xsd_all tok_xsd_optional tok_xsd_nillable tok_xsd_attrs tok_void tok_bool tok_string tok_binary tok_uuid tok_byte tok_i8 tok_i16 tok_i32 tok_i64 tok_double tok_map tok_list tok_set tok_oneway tok_async tok_typedef tok_struct tok_exception tok_throws tok_extends tok_service tok_enum tok_const tok_required tok_optional tok_union tok_reference)
     nil
     (Program
      ((Header))
@@ -265,9 +258,13 @@
     (EnumDef
      ((EnumValue TypeAnnotations CommaOrSemicolonOptional)))
     (EnumValue
-     ((tok_identifier tok_eq tok_int_constant)
+     ((tok_identifier tok_eq tok_number_constant)
       (wisent-raw-tag
        (semantic-tag-new-variable $1 nil $3)))
+     ((tok_identifier tok_eq tok_minus tok_number_constant)
+      (wisent-raw-tag
+       (semantic-tag-new-variable $1 nil
+				  (concat $3 $4))))
      ((tok_identifier)
       (wisent-raw-tag
        (semantic-tag-new-variable $1 nil nil))))
@@ -276,9 +273,10 @@
       (wisent-raw-tag
        (semantic-tag-new-variable $3 $2 $5))))
     (ConstValue
-     ((tok_int_constant))
+     ((tok_number_constant))
+     ((tok_minus tok_number_constant)
+      (concat $1 $2))
      ((tok_boolean_literal))
-     ((tok_dub_constant))
      ((tok_literal))
      ((tok_identifier)
       (wisent-raw-tag
@@ -413,7 +411,7 @@
      ((tok_required))
      ((tok_optional)))
     (FieldIdentifier
-     ((tok_int_constant tok_colon))
+     ((tok_number_constant tok_colon))
      (nil))
     (FieldReference
      ((tok_reference))
@@ -499,11 +497,11 @@
 
 ;;; Analyzers
 ;;
-(define-lex-regex-type-analyzer wisent-thrift-wy--<int_constant>-regexp-analyzer
-  "regexp analyzer for <int_constant> tokens."
-  "\\([+-]?[0-9]+\\)"
+(define-lex-regex-type-analyzer wisent-thrift-wy--<number>-regexp-analyzer
+  "regexp analyzer for <number> tokens."
+  semantic-lex-number-expression
   nil
-  'tok_int_constant)
+  'tok_number_constant)
 
 (define-lex-keyword-type-analyzer wisent-thrift-wy--<keyword>-keyword-analyzer
   "keyword analyzer for <keyword> tokens."
@@ -579,21 +577,17 @@
     (tok_boolean_literal . "\\`false\\'"))
   'tok_identifier)
 
-(define-lex-regex-type-analyzer wisent-thrift-wy--<dub_constant>-regexp-analyzer
-  "regexp analyzer for <dub_constant> tokens."
-  "\\([+-]?[0-9]+\\(.[0-9]+\\)?\\([eE][+-]?[0-9]+\\)?\\)"
-  nil
-  'tok_dub_constant)
-
 
 ;;; Epilogue
 ;;
 (defun extract-include-id (include-literal)
   "Extract include id from INCLUDE_LITERAL.
 Like \"foo/bar.thrift\" will return bar."
-  (if (and (string-prefix-p "\"" include-literal) (string-suffix-p "\"" include-literal))
+  (if (and include-literal
+           (string-prefix-p "\"" include-literal)
+           (string-suffix-p "\"" include-literal))
         (setq include-literal (substring include-literal 1 -1)))
-  (car (split-string (car (last (split-string include-literal "/"))) "\\.")))
+  (and include-literal (car (split-string (car (last (split-string include-literal "/"))) "\\."))))
 
 ;; Define the lexer for this grammar
 (define-lex wisent-thrift-lexer
@@ -603,8 +597,7 @@ It ignores whitespaces, newlines and comments."
   semantic-lex-ignore-newline
   semantic-lex-ignore-comments
   ;;;; Auto-generated analyzers.
-  wisent-thrift-wy--<int_constant>-regexp-analyzer
-  wisent-thrift-wy--<dub_constant>-regexp-analyzer
+  wisent-thrift-wy--<number>-regexp-analyzer
   wisent-thrift-wy--<string>-sexp-analyzer
   ;; Must detect keywords before other symbols
   wisent-thrift-wy--<keyword>-keyword-analyzer

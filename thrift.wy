@@ -89,10 +89,8 @@
 %token <punctuation> tok_at          "@"
 
 ;; Constant values
-%type <int_constant> syntax "\\([+-]?[0-9]+\\)" matchdatatype regexp
-%token <int_constant> tok_int_constant
-%type <dub_constant> syntax "\\([+-]?[0-9]+\\(\.[0-9]+\\)?\\([eE][+-]?[0-9]+\\)?\\)" matchdatatype regexp
-%token <dub_constant> tok_dub_constant
+%type  <number>      ;;syntax semantic-lex-number-expression
+%token <number>      tok_number_constant
 
 ;; Literal terminals
 %type <symbol>      ;; syntax "\\(\\sw\\|\\s_\\)+"
@@ -338,8 +336,10 @@ EnumDef
   ;
 
 EnumValue
-  : tok_identifier tok_eq tok_int_constant
+  : tok_identifier tok_eq tok_number_constant
     (VARIABLE-TAG $1 nil $3)
+  | tok_identifier tok_eq tok_minus tok_number_constant
+    (VARIABLE-TAG $1 nil (concat $3 $4))
   | tok_identifier
     (VARIABLE-TAG $1 nil nil)
   ;
@@ -350,9 +350,10 @@ Const
   ;
 
 ConstValue
-  : tok_int_constant
+  : tok_number_constant
+  | tok_minus tok_number_constant
+    (concat $1 $2)
   | tok_boolean_literal
-  | tok_dub_constant
   | tok_literal
   | tok_identifier
     (VARIABLE-TAG $1 nil nil)
@@ -527,7 +528,7 @@ FieldName
 
 
 FieldIdentifier
-  : tok_int_constant tok_colon
+  : tok_number_constant tok_colon
   | ;;EMPTY
   ;
 
@@ -635,9 +636,11 @@ TypeAnnotationValue
 (defun extract-include-id (include-literal)
   "Extract include id from INCLUDE_LITERAL.
 Like \"foo/bar.thrift\" will return bar."
-  (if (and (string-prefix-p "\"" include-literal) (string-suffix-p "\"" include-literal))
+  (if (and include-literal
+           (string-prefix-p "\"" include-literal)
+           (string-suffix-p "\"" include-literal))
         (setq include-literal (substring include-literal 1 -1)))
-  (car (split-string (car (last (split-string include-literal "/"))) "\\.")))
+  (and include-literal (car (split-string (car (last (split-string include-literal "/"))) "\\."))))
 
 ;; Define the lexer for this grammar
 (define-lex wisent-thrift-lexer
@@ -647,8 +650,7 @@ It ignores whitespaces, newlines and comments."
   semantic-lex-ignore-newline
   semantic-lex-ignore-comments
   ;;;; Auto-generated analyzers.
-  wisent-thrift-wy--<int_constant>-regexp-analyzer
-  wisent-thrift-wy--<dub_constant>-regexp-analyzer
+  wisent-thrift-wy--<number>-regexp-analyzer
   wisent-thrift-wy--<string>-sexp-analyzer
   ;; Must detect keywords before other symbols
   wisent-thrift-wy--<keyword>-keyword-analyzer

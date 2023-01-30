@@ -11,7 +11,7 @@ package com.jerryxgh.java;
 
 public class Main {
     private static class A {
-        int aa;
+        int aa = -1212;
         int ab;
         String ac;
         String ad;
