@@ -36,7 +36,10 @@
 (require 'semantic/wisent)
 (require 'semantic/ctxt)
 (require 'semantic/tag-file)
+(require 'semantic/analyze)
 (require 'semantic/java)
+(require 'semantic/db-typecache)
+(require 'cc-mode)
 (require 'thrift-wy)
 (require 'thrift)
 
@@ -104,6 +107,40 @@ MSG is the message string to report."
         (expand-file-name (substring tfile 1 -1) (file-name-directory (semantic-tag-file-name tag)))
         (expand-file-name tfile (file-name-directory (semantic-tag-file-name tag)))
       )))
+
+(define-mode-local-override semantic-analyze-find-tag-sequence thrift-mode (sequence &optional scope typereturn throwsym &rest flags)
+  "Attempt to find all tags in SEQUENCE.
+Optional argument LOCALVAR is the list of local variables to use when
+finding the details on the first element of SEQUENCE in case
+it is not found in the global set of tables.
+Optional argument SCOPE are additional terminals to search which are currently
+scoped.  These are not local variables, but symbols available in a structure
+which doesn't need to be dereferenced.
+Optional argument TYPERETURN is a symbol in which the types of all found
+will be stored.  If nil, that data is thrown away.
+Optional argument THROWSYM specifies a symbol the throw on non-recoverable
+error.
+Remaining arguments FLAGS are additional flags to apply when searching."
+  (semantic-analyze-find-tag-sequence-default (last sequence) scope typereturn throwsym flags))
+
+(define-mode-local-override semanticdb-typecache-find thrift-mode (type &optional path find-file-match)
+  "Search the typecache for TYPE in PATH.
+If type is a string, split the string, and search for the parts.
+If type is a list, treat the type as a pre-split string.
+PATH can be nil for the current buffer, or a semanticdb table.
+FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
+  (message "semanticdb-typecache-find:stringp:%S" (stringp type))
+  (let ((result (semanticdb-typecache-find-default type path find-file-match)))
+    (if result result
+      (dolist (ele (semantic-find-tags-by-class 'include semanticdb-current-table) result)
+        (if (equal type (semantic-tag-get-attribute ele :alias))
+            (setq result ele)))
+      )
+    result))
+
+(setq-mode-local thrift-mode
+                 semanticdb-find-default-throttle
+                 '(local recursive project unloaded system))
 
 ;;;;
 ;;;; Semantic integration of the Java LALR parser

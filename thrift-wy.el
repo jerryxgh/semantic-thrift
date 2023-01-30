@@ -1,9 +1,9 @@
 ;;; thrift-wy.el --- Generated parser support file
 
-;; Copyright (C) 2023 胡丹丹
+;; Copyright (C) 2023 bytedance
 
-;; Author: 胡丹丹 <hudandan@hudandandeMBP>
-;; Created: 2023-01-30 00:16:53+0800
+;; Author: bytedance <bytedance@C02FT0L6MD6V>
+;; Created: 2023-01-30 17:18:01+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -224,7 +224,8 @@
     (Include
      ((tok_include tok_literal)
       (wisent-raw-tag
-       (semantic-tag-new-include $2 nil))))
+       (semantic-tag-new-include $2 nil :alias
+				 (extract-include-id $2)))))
     (Definition
       ((Const))
       ((TypeDefinition))
@@ -587,6 +588,13 @@
 
 ;;; Epilogue
 ;;
+(defun extract-include-id (include-literal)
+  "Extract include id from INCLUDE_LITERAL.
+Like \"foo/bar.thrift\" will return bar."
+  (if (and (string-prefix-p "\"" include-literal) (string-suffix-p "\"" include-literal))
+        (setq include-literal (substring include-literal 1 -1)))
+  (car (split-string (car (last (split-string include-literal "/"))) "\\.")))
+
 ;; Define the lexer for this grammar
 (define-lex wisent-thrift-lexer
   "Lexical analyzer that handles Thrift buffers.
