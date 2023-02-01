@@ -3,7 +3,7 @@
 ;; Copyright (C) 2023 胡丹丹
 
 ;; Author: 胡丹丹 <hudandan@hudandandeMBP>
-;; Created: 2023-01-30 23:21:59+0800
+;; Created: 2023-02-01 23:28:22+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -139,24 +139,13 @@
       (tok_xoreq . "^=")
       (tok_xor . "^")
       (tok_question . "?")
-      (tok_urshifteq . ">>>=")
-      (tok_urshift . ">>>")
-      (tok_rshifteq . ">>=")
-      (tok_rshift . ">>")
-      (tok_gteq . ">=")
       (tok_gt . ">")
-      (tok_eqeq . "==")
       (tok_eq . "=")
-      (tok_lteq . "<=")
-      (tok_lshifteq . "<<=")
-      (tok_lshift . "<<")
       (tok_lt . "<")
       (tok_semicolon . ";")
       (tok_colon . ":")
-      (tok_diveq . "/=")
       (tok_div . "/")
       (tok_dot . ".")
-      (tok_minuseq . "-=")
       (tok_minusminus . "--")
       (tok_minus . "-")
       (tok_comma . ",")
@@ -194,7 +183,7 @@
 
 (defconst wisent-thrift-wy--parse-table
   (wisent-compiled-grammar
-   ((ParenBlock BraceBlock BrackBlock tok_lparen tok_rparen tok_lbrace tok_rbrace tok_lbrack tok_rbrack tok_not tok_noteq tok_mod tok_modeq tok_and tok_andand tok_andeq tok_mult tok_multeq tok_plus tok_plusplus tok_pluseq tok_comma tok_minus tok_minusminus tok_minuseq tok_dot tok_div tok_diveq tok_colon tok_semicolon tok_lt tok_lshift tok_lshifteq tok_lteq tok_eq tok_eqeq tok_gt tok_gteq tok_rshift tok_rshifteq tok_urshift tok_urshifteq tok_question tok_xor tok_xoreq tok_or tok_oreq tok_oror tok_comp tok_ellipsis tok_at tok_number_constant tok_boolean_literal tok_identifier tok_literal tok_include tok_namespace tok_cpp_include tok_cpp_type tok_xsd_all tok_xsd_optional tok_xsd_nillable tok_xsd_attrs tok_void tok_bool tok_string tok_binary tok_uuid tok_byte tok_i8 tok_i16 tok_i32 tok_i64 tok_double tok_map tok_list tok_set tok_oneway tok_async tok_typedef tok_struct tok_exception tok_throws tok_extends tok_service tok_enum tok_const tok_required tok_optional tok_union tok_reference)
+   ((ParenBlock BraceBlock BrackBlock tok_lparen tok_rparen tok_lbrace tok_rbrace tok_lbrack tok_rbrack tok_not tok_noteq tok_mod tok_modeq tok_and tok_andand tok_andeq tok_mult tok_multeq tok_plus tok_plusplus tok_pluseq tok_comma tok_minus tok_minusminus tok_dot tok_div tok_colon tok_semicolon tok_lt tok_eq tok_gt tok_question tok_xor tok_xoreq tok_or tok_oreq tok_oror tok_comp tok_ellipsis tok_at tok_number_constant tok_boolean_literal tok_identifier tok_literal tok_include tok_namespace tok_cpp_include tok_cpp_type tok_xsd_all tok_xsd_optional tok_xsd_nillable tok_xsd_attrs tok_void tok_bool tok_string tok_binary tok_uuid tok_byte tok_i8 tok_i16 tok_i32 tok_i64 tok_double tok_map tok_list tok_set tok_oneway tok_async tok_typedef tok_struct tok_exception tok_throws tok_extends tok_service tok_enum tok_const tok_required tok_optional tok_union tok_reference)
     nil
     (Program
      ((Header))
@@ -278,9 +267,9 @@
       (concat $1 $2))
      ((tok_boolean_literal))
      ((tok_literal))
-     ((tok_identifier)
+     ((tok_identifier tok_dot tok_identifier)
       (wisent-raw-tag
-       (semantic-tag-new-variable $1 nil nil)))
+       (semantic-tag-new-variable $3 $1 nil)))
      ((ConstList))
      ((ConstMap)))
     (ConstList
@@ -329,10 +318,10 @@
       nil)
      ((FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional)
       (wisent-raw-tag
-       (semantic-tag-new-variable $5 $3 nil)))
+       (semantic-tag-new-variable $5 $3 nil :index $1 :typemodifiers $2)))
      ((FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations tok_rbrace)
       (wisent-raw-tag
-       (semantic-tag-new-variable $5 $3 nil))))
+       (semantic-tag-new-variable $5 $3 nil :index $1 :typemodifiers $2))))
     (XsdAll
      ((tok_xsd_all))
      (nil))
@@ -428,14 +417,13 @@
      ((tok_void)))
     (FieldType
      ((tok_identifier tok_dot tok_identifier)
-      (identity $3))
+      (concat $1 $2 $3))
      ((tok_identifier)
       (identity $1))
      ((BaseType))
      ((ContainerType)))
     (BaseType
-     ((SimpleBaseType TypeAnnotations)
-      (concat $1 $2)))
+     ((SimpleBaseType TypeAnnotations)))
     (SimpleBaseType
      ((tok_string))
      ((tok_binary))
@@ -448,37 +436,45 @@
      ((tok_i64))
      ((tok_double)))
     (ContainerType
-     ((SimpleContainerType TypeAnnotations)
-      (concat $1 $2)))
+     ((SimpleContainerType TypeAnnotations)))
     (SimpleContainerType
      ((MapType))
      ((SetType))
      ((ListType)))
     (MapType
-     ((tok_map CppType tok_lt FieldType tok_comma FieldType tok_gt)))
+     ((tok_map CppType tok_lt FieldType tok_comma FieldType tok_gt)
+      (concat $1 $2 $3 $4 $5 $6 $7)))
     (SetType
-     ((tok_set CppType tok_lt FieldType tok_gt)))
+     ((tok_set CppType tok_lt FieldType tok_gt)
+      (concat $1 $2 $3 $4 $5)))
     (ListType
-     ((tok_list CppType tok_lt FieldType tok_gt)))
+     ((tok_list CppType tok_lt FieldType tok_gt)
+      (concat $1 $2 $3 $4 $5)))
     (CppType
      ((tok_cpp_type tok_literal)
       (concat $1 $2))
      (nil))
     (TypeAnnotations
-     ((tok_lparen TypeAnnotationList tok_rparen))
+     ((ParenBlock)
+      (semantic-parse-region
+       (car $region1)
+       (cdr $region1)
+       'TypeAnnotationMemberDeclaration 1))
      (nil))
-    (TypeAnnotationList
-     ((TypeAnnotationList TypeAnnotation)
-      (cons $2 $1))
-     (nil))
+    (TypeAnnotationMemberDeclaration
+     ((tok_lparen)
+      nil)
+     ((tok_rparen)
+      nil)
+     ((TypeAnnotation))
+     ((TypeAnnotation tok_rparen)))
     (TypeAnnotation
-     ((tok_identifier TypeAnnotationValue CommaOrSemicolonOptional)
-      (concat $1 $2)))
+     ((tok_identifier tok_dot tok_identifier TypeAnnotationValue CommaOrSemicolonOptional))
+     ((tok_identifier TypeAnnotationValue CommaOrSemicolonOptional)))
     (TypeAnnotationValue
-     ((tok_eq tok_literal)
-      (list $2))
+     ((tok_eq tok_literal))
      (nil)))
-   (Program Header Definition EnumMemberDeclaration ConstListMemberDeclaration StructBodyMemberDeclaration ConstMapMemberDeclaration))
+   (Program Header Definition EnumMemberDeclaration ConstListMemberDeclaration StructBodyMemberDeclaration ConstMapMemberDeclaration TypeAnnotationMemberDeclaration))
   "Parser table.")
 
 (defun wisent-thrift-wy--install-parser ()
@@ -535,24 +531,13 @@
     (tok_xoreq . "^=")
     (tok_xor . "^")
     (tok_question . "?")
-    (tok_urshifteq . ">>>=")
-    (tok_urshift . ">>>")
-    (tok_rshifteq . ">>=")
-    (tok_rshift . ">>")
-    (tok_gteq . ">=")
     (tok_gt . ">")
-    (tok_eqeq . "==")
     (tok_eq . "=")
-    (tok_lteq . "<=")
-    (tok_lshifteq . "<<=")
-    (tok_lshift . "<<")
     (tok_lt . "<")
     (tok_semicolon . ";")
     (tok_colon . ":")
-    (tok_diveq . "/=")
     (tok_div . "/")
     (tok_dot . ".")
-    (tok_minuseq . "-=")
     (tok_minusminus . "--")
     (tok_minus . "-")
     (tok_comma . ",")

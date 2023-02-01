@@ -122,7 +122,15 @@ Optional argument THROWSYM specifies a symbol the throw on non-recoverable
 error.
 Remaining arguments FLAGS are additional flags to apply when searching."
   ;; (message "semantic-analyze-find-tag-sequence,sequence:%S" sequence)
-  (semantic-analyze-find-tag-sequence-default (last sequence) scope typereturn throwsym flags))
+  (let ((result (semantic-analyze-find-tag-sequence-default sequence scope typereturn throwsym flags)))
+    (let ((filtered-result (seq-filter (lambda (ele)
+                                         (if (equal 'include (semantic-tag-class ele))
+                                             (equal (car (last sequence)) (semantic-tag-get-attribute ele :alias))
+                                           t))
+                                       result)))
+      (if (length> filtered-result 0)
+          filtered-result
+        (semantic-analyze-find-tag-sequence-default (last sequence) scope typereturn throwsym flags)))))
 
 (define-mode-local-override semanticdb-typecache-find thrift-mode (type &optional path find-file-match)
   "Search the typecache for TYPE in PATH.
@@ -132,7 +140,7 @@ PATH can be nil for the current buffer, or a semanticdb table.
 FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
   ;; (message "semanticdb-typecache-find,type:%S,stringp:%S" type (stringp type))
   (let ((result (semanticdb-typecache-find-default type path find-file-match)))
-    (message "semanticdb-typecache-find,result:%S" result)
+    ;; (message "semanticdb-typecache-find,result:%S" result)
     (if result result
       (dolist (ele (semantic-find-tags-by-class 'include semanticdb-current-table) result)
         (if (or (and (listp type) (equal (car type)(semantic-tag-get-attribute ele :alias)))
@@ -144,6 +152,18 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
 (setq-mode-local thrift-mode
                  semanticdb-find-default-throttle
                  '(local recursive project unloaded system))
+
+;;;###autoload
+(defvar thrift-syntax-table
+  (let ((table (copy-syntax-table java-mode-syntax-table)))
+    ;; Comments can start with //, /* or # characters.
+    (modify-syntax-entry ?/ ". 124" table)
+    (modify-syntax-entry ?* ". 23b" table)
+    (modify-syntax-entry ?# "<" table)
+    (modify-syntax-entry ?\n ">" table)
+    table)
+  "Syntax table used in `thrift-mode' buffers.")
+
 
 ;;;;
 ;;;; Semantic integration of the Java LALR parser
@@ -162,7 +182,7 @@ Use the alternate LALR(1) parser."
    ;; Lexical analysis
    semantic-lex-number-expression semantic-java-number-regexp
    semantic-lex-analyzer #'wisent-thrift-lexer
-   semantic-lex-syntax-table java-mode-syntax-table
+   semantic-lex-syntax-table thrift-syntax-table
    semantic-lex-comment-regex "\\(//[^\\n]*\\)\\|\\(#[^\n]*\\)"
    ;; Parsing
    ;; semantic-tag-expand-function #'semantic-java-expand-tag

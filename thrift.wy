@@ -27,6 +27,7 @@
 %start ConstListMemberDeclaration
 %start StructBodyMemberDeclaration
 %start ConstMapMemberDeclaration
+%start TypeAnnotationMemberDeclaration
 
 ;;; Block & Parenthesis terminals
 %type  <block>       ;;syntax "\\s(\\|\\s)" matchdatatype block
@@ -60,24 +61,13 @@
 %token <punctuation> tok_comma       ","
 %token <punctuation> tok_minus       "-"
 %token <punctuation> tok_minusminus  "--"
-%token <punctuation> tok_minuseq     "-="
 %token <punctuation> tok_dot         "."
 %token <punctuation> tok_div         "/"
-%token <punctuation> tok_diveq       "/="
 %token <punctuation> tok_colon       ":"
 %token <punctuation> tok_semicolon   ";"
 %token <punctuation> tok_lt          "<"
-%token <punctuation> tok_lshift      "<<"
-%token <punctuation> tok_lshifteq    "<<="
-%token <punctuation> tok_lteq        "<="
 %token <punctuation> tok_eq          "="
-%token <punctuation> tok_eqeq        "=="
 %token <punctuation> tok_gt          ">"
-%token <punctuation> tok_gteq        ">="
-%token <punctuation> tok_rshift      ">>"
-%token <punctuation> tok_rshifteq    ">>="
-%token <punctuation> tok_urshift     ">>>"
-%token <punctuation> tok_urshifteq   ">>>="
 %token <punctuation> tok_question    "?"
 %token <punctuation> tok_xor         "^"
 %token <punctuation> tok_xoreq       "^="
@@ -355,8 +345,8 @@ ConstValue
     (concat $1 $2)
   | tok_boolean_literal
   | tok_literal
-  | tok_identifier
-    (VARIABLE-TAG $1 nil nil)
+  | tok_identifier tok_dot tok_identifier
+    (VARIABLE-TAG $3 $1 nil)
   | ConstList
   | ConstMap
   ;
@@ -410,9 +400,9 @@ StructBodyMemberDeclaration
   | tok_rbrace
     ()
   | FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional
-    (VARIABLE-TAG $5 $3 nil)
+    (VARIABLE-TAG $5 $3 nil :index $1 :typemodifiers $2)
   | FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations tok_rbrace
-    (VARIABLE-TAG $5 $3 nil)
+    (VARIABLE-TAG $5 $3 nil :index $1 :typemodifiers $2)
   ;
 
 XsdAll
@@ -555,7 +545,7 @@ FunctionType
 
 FieldType
   : tok_identifier tok_dot tok_identifier
-    (identity $3)
+    (concat $1 $2 $3)
   | tok_identifier
     (identity $1)
   | BaseType
@@ -564,7 +554,6 @@ FieldType
 
 BaseType
   : SimpleBaseType TypeAnnotations
-    (concat $1 $2)
   ;
 
 SimpleBaseType
@@ -582,7 +571,6 @@ SimpleBaseType
 
 ContainerType
   : SimpleContainerType TypeAnnotations
-    (concat $1 $2)
   ;
 
 SimpleContainerType
@@ -593,14 +581,17 @@ SimpleContainerType
 
 MapType
   : tok_map CppType tok_lt FieldType tok_comma FieldType tok_gt
+    (concat $1 $2 $3 $4 $5 $6 $7)
   ;
 
 SetType
   : tok_set CppType tok_lt FieldType tok_gt
+    (concat $1 $2 $3 $4 $5)
   ;
 
 ListType
   : tok_list CppType tok_lt FieldType tok_gt
+    (concat $1 $2 $3 $4 $5)
   ;
 
 CppType
@@ -610,24 +601,27 @@ CppType
   ;
 
 TypeAnnotations
-  : tok_lparen TypeAnnotationList tok_rparen
+  : ParenBlock
+    (EXPANDFULL $1 TypeAnnotationMemberDeclaration)
   | ;;EMPTY
   ;
 
-TypeAnnotationList
-  : TypeAnnotationList TypeAnnotation
-    (cons $2 $1)
-  | ;;EMPTY
+TypeAnnotationMemberDeclaration
+  : tok_lparen
+    ()
+  | tok_rparen
+    ()
+  | TypeAnnotation
+  | TypeAnnotation tok_rparen
   ;
 
 TypeAnnotation
-  : tok_identifier TypeAnnotationValue CommaOrSemicolonOptional
-    (concat $1 $2)
+  : tok_identifier tok_dot tok_identifier TypeAnnotationValue CommaOrSemicolonOptional
+  | tok_identifier TypeAnnotationValue CommaOrSemicolonOptional
   ;
 
 TypeAnnotationValue
   : tok_eq tok_literal
-    (list $2)
   | ;;EMPTY
   ;
 
