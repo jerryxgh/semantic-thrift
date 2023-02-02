@@ -445,6 +445,7 @@ UnflagArgs
 
 Extends
   : tok_extends tok_identifier
+    (identified $2)
   | ;;EMPTY
   ;
 
