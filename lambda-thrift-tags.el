@@ -61,9 +61,8 @@ MSG is the message string to report."
 
   (let ((tfile (semantic-tag-include-filename tag)))
     (if (and (string-prefix-p "\"" tfile) (string-suffix-p "\"" tfile))
-        (expand-file-name (substring tfile 1 -1) (file-name-directory (semantic-tag-file-name tag)))
-        (expand-file-name tfile (file-name-directory (semantic-tag-file-name tag)))
-      )))
+        (expand-file-name (substring tfile 1 -1))
+        (expand-file-name tfile))))
 
 (define-mode-local-override semantic-analyze-find-tag-sequence thrift-mode (sequence &optional scope typereturn throwsym &rest flags)
   "Attempt to find all tags in SEQUENCE.
@@ -97,7 +96,6 @@ PATH can be nil for the current buffer, or a semanticdb table.
 FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
   ;; (message "semanticdb-typecache-find,type:%S,stringp:%S" type (stringp type))
   (let ((result (semanticdb-typecache-find-default type path find-file-match)))
-    ;; (message "semanticdb-typecache-find,result:%S" result)
     (if result result
       (dolist (ele (semantic-find-tags-by-class 'include semanticdb-current-table) result)
         (if (or (and (listp type) (equal (car type)(semantic-tag-get-attribute ele :alias)))
