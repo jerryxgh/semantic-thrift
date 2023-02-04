@@ -3,7 +3,7 @@
 ;; Copyright (C) 2023 胡丹丹
 
 ;; Author: 胡丹丹 <hudandan@hudandandeMBP>
-;; Created: 2023-02-01 23:28:22+0800
+;; Created: 2023-02-04 23:20:41+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -267,7 +267,7 @@
       (concat $1 $2))
      ((tok_boolean_literal))
      ((tok_literal))
-     ((tok_identifier tok_dot tok_identifier)
+     ((tok_identifier tok_dot TokWithDot)
       (wisent-raw-tag
        (semantic-tag-new-variable $3 $1 nil)))
      ((ConstList))
@@ -302,72 +302,90 @@
      ((tok_struct))
      ((tok_union)))
     (Struct
-     ((StructHead tok_identifier XsdAll StructBody TypeAnnotations)
+     ((StructHead tok_identifier XsdAll FieldsInBrace TypeAnnotations)
       (wisent-raw-tag
        (semantic-tag-new-type $2 $1 $4 nil))))
-    (StructBody
-     ((BraceBlock)
-      (semantic-parse-region
-       (car $region1)
-       (cdr $region1)
-       'StructBodyMemberDeclaration 1)))
-    (StructBodyMemberDeclaration
-     ((tok_lbrace)
-      nil)
-     ((tok_rbrace)
-      nil)
-     ((FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional)
-      (wisent-raw-tag
-       (semantic-tag-new-variable $5 $3 nil :index $1 :typemodifiers $2)))
-     ((FieldIdentifier FieldRequiredness FieldType FieldReference tok_identifier FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations tok_rbrace)
-      (wisent-raw-tag
-       (semantic-tag-new-variable $5 $3 nil :index $1 :typemodifiers $2))))
     (XsdAll
      ((tok_xsd_all))
      (nil))
     (XsdOptional
-     ((tok_xsd_optional)
-      (list $1))
+     ((tok_xsd_optional))
      (nil))
     (XsdNillable
-     ((tok_xsd_nillable)
-      (list $1))
+     ((tok_xsd_nillable))
      (nil))
     (XsdAttributes
-     ((tok_xsd_attrs tok_lbrace FieldList tok_rbrace))
+     ((tok_xsd_attrs FieldsInBrace))
      (nil))
     (Xception
-     ((tok_exception tok_identifier tok_lbrace FieldList tok_rbrace TypeAnnotations)))
+     ((tok_exception tok_identifier FieldsInBrace TypeAnnotations)))
     (Service
-     ((tok_service tok_identifier Extends tok_lbrace FlagArgs FunctionList UnflagArgs tok_rbrace TypeAnnotations)))
-    (FlagArgs
-     (nil))
-    (UnflagArgs
-     (nil))
+     ((tok_service tok_identifier Extends ServiceBody TypeAnnotations)
+      (wisent-raw-tag
+       (semantic-tag-new-type $2 $1 $4
+			      (if $3
+				  (cons nil $3))))))
+    (ServiceBody
+     ((BraceBlock)
+      (semantic-parse-region
+       (car $region1)
+       (cdr $region1)
+       'ServiceMemberDeclaration 1)))
+    (ServiceMemberDeclaration
+     ((tok_lbrace)
+      nil)
+     ((tok_rbrace)
+      nil)
+     ((Function))
+     ((Function tok_rbrace)))
     (Extends
-     ((tok_extends tok_identifier))
-     (nil))
-    (FunctionList
-     ((FunctionList Function))
+     ((tok_extends tok_identifier)
+      (identity $2))
      (nil))
     (Function
-     ((Oneway FunctionType tok_identifier tok_lparen FieldList tok_rparen Throws TypeAnnotations CommaOrSemicolonOptional)))
+     ((Oneway FunctionType tok_identifier FieldsInParen Throws TypeAnnotations CommaOrSemicolonOptional)
+      (wisent-raw-tag
+       (semantic-tag-new-function $3 $2 $4 :typemodifiers $1 :throws $5))))
+    (FieldsInParen
+     ((ParenBlock)
+      (semantic-parse-region
+       (car $region1)
+       (cdr $region1)
+       'FieldsInParenMemberDeclaration 1)))
+    (FieldsInParenMemberDeclaration
+     ((tok_lparen)
+      nil)
+     ((tok_rparen)
+      nil)
+     ((Field CommaOrSemicolonOptional))
+     ((Field tok_rparen)))
+    (FieldsInBrace
+     ((BraceBlock)
+      (semantic-parse-region
+       (car $region1)
+       (cdr $region1)
+       'FieldsInBraceMemberDeclaration 1)))
+    (FieldsInBraceMemberDeclaration
+     ((tok_lbrace)
+      nil)
+     ((tok_rbrace)
+      nil)
+     ((Field CommaOrSemicolonOptional))
+     ((Field tok_rbrace)))
     (Oneway
      ((tok_oneway))
      ((tok_async))
      (nil))
     (Throws
-     ((tok_throws tok_lparen FieldList tok_rparen))
-     (nil))
-    (FieldList
-     ((FieldList Field))
+     ((tok_throws FieldsInParen)
+      (nreverse $2))
      (nil))
     (Field
-     ((FieldIdentifier FieldRequiredness FieldType FieldReference FieldName FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations CommaOrSemicolonOptional)))
-    (FieldName
-     ((tok_identifier)
+     ((FieldIdentifier FieldRequiredness FieldType FieldReference FieldName FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations)
       (wisent-raw-tag
-       (semantic-tag-new-variable $1 nil nil)))
+       (semantic-tag-new-variable $5 $3 $6 :index $1 :typemodifiers $2))))
+    (FieldName
+     ((tok_identifier))
      ((tok_namespace))
      ((tok_cpp_include))
      ((tok_cpp_type))
@@ -416,10 +434,7 @@
      ((FieldType))
      ((tok_void)))
     (FieldType
-     ((tok_identifier tok_dot tok_identifier)
-      (concat $1 $2 $3))
-     ((tok_identifier)
-      (identity $1))
+     ((TokWithDot))
      ((BaseType))
      ((ContainerType)))
     (BaseType
@@ -469,12 +484,13 @@
      ((TypeAnnotation))
      ((TypeAnnotation tok_rparen)))
     (TypeAnnotation
-     ((tok_identifier tok_dot tok_identifier TypeAnnotationValue CommaOrSemicolonOptional))
+     ((tok_identifier tok_dot TokWithDot TypeAnnotationValue CommaOrSemicolonOptional))
      ((tok_identifier TypeAnnotationValue CommaOrSemicolonOptional)))
     (TypeAnnotationValue
-     ((tok_eq tok_literal))
+     ((tok_eq tok_literal)
+      (list $2))
      (nil)))
-   (Program Header Definition EnumMemberDeclaration ConstListMemberDeclaration StructBodyMemberDeclaration ConstMapMemberDeclaration TypeAnnotationMemberDeclaration))
+   (Program Header Definition EnumMemberDeclaration ConstListMemberDeclaration ConstMapMemberDeclaration TypeAnnotationMemberDeclaration ServiceMemberDeclaration FieldsInParenMemberDeclaration FieldsInBraceMemberDeclaration))
   "Parser table.")
 
 (defun wisent-thrift-wy--install-parser ()

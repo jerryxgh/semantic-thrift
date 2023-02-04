@@ -1,47 +1,6 @@
 service ThriftTest
 {
     /**
-     * Prints "testVoid()" and returns nothing.
-     */
-    void testVoid(),
-    /**
-     * Prints 'testString("%s")' with thing as '%s'
-     * @param string thing - the string to print
-     * @return string - returns the string 'thing'
-     */
-    string testString(1: string thing),
-    /**
-     * Prints 'testBool("%s")' where '%s' with thing as 'true' or 'false'
-     * @param bool thing - the bool data to print
-     * @return bool - returns the bool 'thing'
-     */
-    bool testBool(1: bool thing),
-    /**
-     * Prints 'testByte("%d")' with thing as '%d'
-     * The types i8 and byte are synonyms, use of i8 is encouraged, byte still exists for the sake of compatibility.
-     * @param byte thing - the i8/byte to print
-     * @return i8 - returns the i8/byte 'thing'
-     */
-    i8 testByte(1: i8 thing),
-    /**
-     * Prints 'testI32("%d")' with thing as '%d'
-     * @param i32 thing - the i32 to print
-     * @return i32 - returns the i32 'thing'
-     */
-    i32 testI32(1: i32 thing),
-    /**
-     * Prints 'testI64("%d")' with thing as '%d'
-     * @param i64 thing - the i64 to print
-     * @return i64 - returns the i64 'thing'
-     */
-    i64 testI64(1: i64 thing),
-    /**
-     * Prints 'testDouble("%f")' with thing as '%f'
-     * @param double thing - the double to print
-     * @return double - returns the double 'thing'
-     */
-    double testDouble(1: double thing),
-    /**
      * Prints 'testBinary("%s")' where '%s' is a hex-formatted string of thing's data
      * @param binary thing - the binary data to print
      * @return binary - returns the binary 'thing'

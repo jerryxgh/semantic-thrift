@@ -154,13 +154,15 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
                  '(local recursive project unloaded system))
 
 ;;;###autoload
-(defvar thrift-syntax-table
+(defvar lambda-thrift-syntax-table
   (let ((table (copy-syntax-table java-mode-syntax-table)))
     ;; Comments can start with //, /* or # characters.
-    (modify-syntax-entry ?/ ". 124" table)
-    (modify-syntax-entry ?* ". 23b" table)
-    (modify-syntax-entry ?# "<" table)
-    (modify-syntax-entry ?\n ">" table)
+    (modify-syntax-entry ?/ ". 124b" table)
+    (modify-syntax-entry ?* ". 23" table)
+    (modify-syntax-entry ?# "< b" table)
+    (modify-syntax-entry ?\n "> b" table)
+    (modify-syntax-entry ?\^m "> b" table)
+
     table)
   "Syntax table used in `thrift-mode' buffers.")
 
@@ -176,14 +178,17 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
 (defun wisent-thrift-default-setup ()
   "Hook run to setup Semantic in `thrift-mode'.
 Use the alternate LALR(1) parser."
-  (message "running_wisent-thrift-default-setup")
+  ;; (message "debug,running_wisent-thrift-default-setup")
   (wisent-thrift-wy--install-parser)
   (setq
    ;; Lexical analysis
    semantic-lex-number-expression semantic-java-number-regexp
    semantic-lex-analyzer #'wisent-thrift-lexer
-   semantic-lex-syntax-table thrift-syntax-table
-   semantic-lex-comment-regex "\\(//[^\\n]*\\)\\|\\(#[^\n]*\\)"
+   semantic-lex-syntax-table lambda-thrift-syntax-table
+   ;;     Its value is "\\(//[^\\n]*\\)\\|\\(#[^]*\\)"
+;; Its value is "\\(\\s<\\|\\(?://+\\|/\\*+\\)\\s *\\)"
+
+   semantic-lex-comment-regex "\\(\\s<\\|\\(?://+\\|/\\*+\\)\\s *\\)"
    ;; Parsing
    ;; semantic-tag-expand-function #'semantic-java-expand-tag
    ;; Environment
