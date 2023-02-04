@@ -1,9 +1,9 @@
-;;; thrift-wy.el --- Generated parser support file
+;;; lambda-thrift-wy.el --- Generated parser support file
 
 ;; Copyright (C) 2023 胡丹丹
 
 ;; Author: 胡丹丹 <hudandan@hudandandeMBP>
-;; Created: 2023-02-04 23:20:41+0800
+;; Created: 2023-02-04 23:43:02+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -25,7 +25,7 @@
 ;;; Commentary:
 ;;
 ;; PLEASE DO NOT MANUALLY EDIT THIS FILE!  It is automatically
-;; generated from the grammar file thrift.wy.
+;; generated from the grammar file lambda-thrift.wy.
 
 ;;; Code:
 
@@ -39,11 +39,11 @@
 
 ;;; Declarations
 ;;
-(eval-and-compile (defconst wisent-thrift-wy--expected-conflicts
+(eval-and-compile (defconst lambda-thrift-wy--expected-conflicts
 		    nil
 		    "The number of expected shift/reduce conflicts in this grammar."))
 
-(defconst wisent-thrift-wy--keyword-table
+(defconst lambda-thrift-wy--keyword-table
   (semantic-lex-make-keyword-table
    '(("include" . tok_include)
      ("namespace" . tok_namespace)
@@ -119,7 +119,7 @@
      ("include" summary "Include other thrift file: include \"name\"")))
   "Table of language keywords.")
 
-(defconst wisent-thrift-wy--token-table
+(defconst lambda-thrift-wy--token-table
   (semantic-lex-make-type-table
    '(("string"
       (tok_literal))
@@ -181,7 +181,7 @@
      ("block" :declared t)))
   "Table of lexical tokens.")
 
-(defconst wisent-thrift-wy--parse-table
+(defconst lambda-thrift-wy--parse-table
   (wisent-compiled-grammar
    ((ParenBlock BraceBlock BrackBlock tok_lparen tok_rparen tok_lbrace tok_rbrace tok_lbrack tok_rbrack tok_not tok_noteq tok_mod tok_modeq tok_and tok_andand tok_andeq tok_mult tok_multeq tok_plus tok_plusplus tok_pluseq tok_comma tok_minus tok_minusminus tok_dot tok_div tok_colon tok_semicolon tok_lt tok_eq tok_gt tok_question tok_xor tok_xoreq tok_or tok_oreq tok_oror tok_comp tok_ellipsis tok_at tok_number_constant tok_boolean_literal tok_identifier tok_literal tok_include tok_namespace tok_cpp_include tok_cpp_type tok_xsd_all tok_xsd_optional tok_xsd_nillable tok_xsd_attrs tok_void tok_bool tok_string tok_binary tok_uuid tok_byte tok_i8 tok_i16 tok_i32 tok_i64 tok_double tok_map tok_list tok_set tok_oneway tok_async tok_typedef tok_struct tok_exception tok_throws tok_extends tok_service tok_enum tok_const tok_required tok_optional tok_union tok_reference)
     nil
@@ -493,15 +493,15 @@
    (Program Header Definition EnumMemberDeclaration ConstListMemberDeclaration ConstMapMemberDeclaration TypeAnnotationMemberDeclaration ServiceMemberDeclaration FieldsInParenMemberDeclaration FieldsInBraceMemberDeclaration))
   "Parser table.")
 
-(defun wisent-thrift-wy--install-parser ()
+(defun lambda-thrift-wy--install-parser ()
   "Setup the Semantic Parser."
   (semantic-install-function-overrides
    '((semantic-parse-stream . wisent-parse-stream)))
   (setq semantic-parser-name "LALR"
-        semantic--parse-table wisent-thrift-wy--parse-table
-        semantic-debug-parser-source "thrift.wy"
-        semantic-flex-keywords-obarray wisent-thrift-wy--keyword-table
-        semantic-lex-types-obarray wisent-thrift-wy--token-table)
+        semantic--parse-table lambda-thrift-wy--parse-table
+        semantic-debug-parser-source "lambda-thrift.wy"
+        semantic-flex-keywords-obarray lambda-thrift-wy--keyword-table
+        semantic-lex-types-obarray lambda-thrift-wy--token-table)
   ;; Collect unmatched syntax lexical tokens
   (add-hook 'wisent-discarding-token-functions
             #'wisent-collect-unmatched-syntax nil t))
@@ -509,22 +509,22 @@
 
 ;;; Analyzers
 ;;
-(define-lex-regex-type-analyzer wisent-thrift-wy--<number>-regexp-analyzer
+(define-lex-regex-type-analyzer lambda-thrift-wy--<number>-regexp-analyzer
   "regexp analyzer for <number> tokens."
   semantic-lex-number-expression
   nil
   'tok_number_constant)
 
-(define-lex-keyword-type-analyzer wisent-thrift-wy--<keyword>-keyword-analyzer
+(define-lex-keyword-type-analyzer lambda-thrift-wy--<keyword>-keyword-analyzer
   "keyword analyzer for <keyword> tokens."
   "\\(\\sw\\|\\s_\\)+")
 
-(define-lex-sexp-type-analyzer wisent-thrift-wy--<string>-sexp-analyzer
+(define-lex-sexp-type-analyzer lambda-thrift-wy--<string>-sexp-analyzer
   "sexp analyzer for <string> tokens."
   "\\s\""
   'tok_literal)
 
-(define-lex-block-type-analyzer wisent-thrift-wy--<block>-block-analyzer
+(define-lex-block-type-analyzer lambda-thrift-wy--<block>-block-analyzer
   "block analyzer for <block> tokens."
   "\\s(\\|\\s)"
   '((("(" tok_lparen ParenBlock)
@@ -535,7 +535,7 @@
     ("]" tok_rbrack))
   )
 
-(define-lex-string-type-analyzer wisent-thrift-wy--<punctuation>-string-analyzer
+(define-lex-string-type-analyzer lambda-thrift-wy--<punctuation>-string-analyzer
   "string analyzer for <punctuation> tokens."
   "\\(\\s.\\|\\s$\\|\\s'\\)+"
   '((tok_at . "@")
@@ -571,7 +571,7 @@
     (tok_not . "!"))
   'punctuation)
 
-(define-lex-regex-type-analyzer wisent-thrift-wy--<symbol>-regexp-analyzer
+(define-lex-regex-type-analyzer lambda-thrift-wy--<symbol>-regexp-analyzer
   "regexp analyzer for <symbol> tokens."
   "\\(\\sw\\|\\s_\\)+"
   '((tok_boolean_literal . "\\`true\\'")
@@ -591,28 +591,28 @@ Like \"foo/bar.thrift\" will return bar."
   (and include-literal (car (split-string (car (last (split-string include-literal "/"))) "\\."))))
 
 ;; Define the lexer for this grammar
-(define-lex wisent-thrift-lexer
+(define-lex lambda-thrift-lexer
   "Lexical analyzer that handles Thrift buffers.
 It ignores whitespaces, newlines and comments."
   semantic-lex-ignore-whitespace
   semantic-lex-ignore-newline
   semantic-lex-ignore-comments
   ;;;; Auto-generated analyzers.
-  wisent-thrift-wy--<number>-regexp-analyzer
-  wisent-thrift-wy--<string>-sexp-analyzer
+  lambda-thrift-wy--<number>-regexp-analyzer
+  lambda-thrift-wy--<string>-sexp-analyzer
   ;; Must detect keywords before other symbols
-  wisent-thrift-wy--<keyword>-keyword-analyzer
-  wisent-thrift-wy--<symbol>-regexp-analyzer
-  wisent-thrift-wy--<punctuation>-string-analyzer
-  wisent-thrift-wy--<block>-block-analyzer
+  lambda-thrift-wy--<keyword>-keyword-analyzer
+  lambda-thrift-wy--<symbol>-regexp-analyzer
+  lambda-thrift-wy--<punctuation>-string-analyzer
+  lambda-thrift-wy--<block>-block-analyzer
   ;;;;
   semantic-lex-default-action)
 
-(provide 'thrift-wy)
+(provide 'lambda-thrift-wy)
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-update-autoloads: t
 ;; End:
 
-;;; thrift-wy.el ends here
+;;; lambda-thrift-wy.el ends here

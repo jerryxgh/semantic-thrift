@@ -13,8 +13,7 @@ EMACS=emacs
 
 LOADPATH= ./
 
-# wy_SEMANTIC_GRAMMAR=java.wy java-tags.wy thrift.wy
-wy_SEMANTIC_GRAMMAR=thrift.wy
+wy_SEMANTIC_GRAMMAR=lambda-thrift.wy
 VERSION=1.1beta
 
 .PHONY: all
