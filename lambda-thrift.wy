@@ -442,7 +442,7 @@ Extends:
 
 Function:
     Oneway FunctionType tok_identifier FieldsInParen Throws TypeAnnotations CommaOrSemicolonOptional
-    (FUNCTION-TAG $3 $2 $4 :typemodifiers $1 :throws $5)
+    (FUNCTION-TAG $3 $2 $4 :typemodifiers (list $1) :throws $5)
   ;
 
 FieldsInParen:
@@ -487,7 +487,7 @@ Throws:
 
 Field:
     FieldIdentifier FieldRequiredness FieldType FieldReference FieldName FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations
-    (VARIABLE-TAG $5 $3 $6 :index $1 :typemodifiers $2)
+    (VARIABLE-TAG $5 $3 $6 :index $1 :typemodifiers (list $2))
   ;
 
 ;; identifiers and everything that could be one if it would not be identified as

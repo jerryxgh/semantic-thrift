@@ -3,7 +3,7 @@
 ;; Copyright (C) 2023 胡丹丹
 
 ;; Author: 胡丹丹 <hudandan@hudandandeMBP>
-;; Created: 2023-02-04 23:43:02+0800
+;; Created: 2023-02-06 22:46:50+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -345,7 +345,9 @@
     (Function
      ((Oneway FunctionType tok_identifier FieldsInParen Throws TypeAnnotations CommaOrSemicolonOptional)
       (wisent-raw-tag
-       (semantic-tag-new-function $3 $2 $4 :typemodifiers $1 :throws $5))))
+       (semantic-tag-new-function $3 $2 $4 :typemodifiers
+				  (list $1)
+				  :throws $5))))
     (FieldsInParen
      ((ParenBlock)
       (semantic-parse-region
@@ -383,7 +385,8 @@
     (Field
      ((FieldIdentifier FieldRequiredness FieldType FieldReference FieldName FieldValue XsdOptional XsdNillable XsdAttributes TypeAnnotations)
       (wisent-raw-tag
-       (semantic-tag-new-variable $5 $3 $6 :index $1 :typemodifiers $2))))
+       (semantic-tag-new-variable $5 $3 $6 :index $1 :typemodifiers
+				  (list $2)))))
     (FieldName
      ((tok_identifier))
      ((tok_namespace))

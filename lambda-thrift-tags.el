@@ -142,6 +142,8 @@ Use the alternate LALR(1) parser."
    semantic-lex-comment-regex "\\(\\s<\\|\\(?://+\\|/\\*+\\)\\s *\\)"
    ))
 
+(add-to-list 'semantic-new-buffer-setup-functions '(thrift-mode . lambda-thrift-default-setup))
+
 (provide 'lambda-thrift-tags)
 
 ;;; lambda-thrift-tags.el ends here
