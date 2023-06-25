@@ -1,4 +1,4 @@
-;;; lambda-thrift-tags.el --- Thrift LALR parser for Emacs -*- lexical-binding: t -*-
+;;; semantic-thrift-tags.el --- Thrift LALR parser for Emacs -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2022 Guanghui Xu
 ;;
@@ -19,7 +19,7 @@
 ;;
 
 ;; Put this file into your load-path and the following into your ~/.emacs:
-;;   (require 'lambda-thrift-tags)
+;;   (require 'semantic-thrift-tags)
 
 ;;; Change Log:
 
@@ -28,10 +28,10 @@
 
 ;;; Code:
 
-;; (add-to-list 'load-path "/Users/bytedance/repository/public/lambda-thrift")
+;; (add-to-list 'load-path "/Users/bytedance/repository/public/semantic-thrift")
 ;; (require 'thrift-wy)
-;; (require 'lambda-thrift-tags)
-;; (add-to-list 'semantic-new-buffer-setup-functions '(thrift-mode . lambda-thrift-default-setup))
+;; (require 'semantic-thrift-tags)
+;; (add-to-list 'semantic-new-buffer-setup-functions '(thrift-mode . semantic-thrift-default-setup))
 
 (require 'semantic/wisent)
 (require 'semantic/ctxt)
@@ -40,14 +40,14 @@
 (require 'semantic/java)
 (require 'semantic/db-typecache)
 (require 'cc-mode)
-(require 'lambda-thrift-wy)
+(require 'semantic-thrift-wy)
 (require 'thrift)
 
 ;;;;
 ;;;; Simple parser error reporting function
 ;;;;
 
-(defun lambda-thrift-parse-error (msg)
+(defun semantic-thrift-parse-error (msg)
   "Error reporting function called when a parse error occurs.
 MSG is the message string to report."
   (message msg)
@@ -109,7 +109,7 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
                  '(local recursive project unloaded system))
 
 ;;;###autoload
-(defvar lambda-thrift-syntax-table
+(defvar semantic-thrift-syntax-table
   (let ((table (copy-syntax-table java-mode-syntax-table)))
     ;; Comments can start with //, /* or # characters.
     (modify-syntax-entry ?/ ". 124b" table)
@@ -130,20 +130,20 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
 (defvar semantic-imenu-summary-function)
 
 ;;;###autoload
-(defun lambda-thrift-default-setup ()
+(defun semantic-thrift-default-setup ()
   "Hook run to setup Semantic in `thrift-mode'.
 Use the alternate LALR(1) parser."
-  (lambda-thrift-wy--install-parser)
+  (semantic-thrift-wy--install-parser)
   (setq
    ;; Lexical analysis
    semantic-lex-number-expression semantic-java-number-regexp
-   semantic-lex-analyzer #'lambda-thrift-lexer
-   semantic-lex-syntax-table lambda-thrift-syntax-table
+   semantic-lex-analyzer #'semantic-thrift-lexer
+   semantic-lex-syntax-table semantic-thrift-syntax-table
    semantic-lex-comment-regex "\\(\\s<\\|\\(?://+\\|/\\*+\\)\\s *\\)"
    ))
 
-(add-to-list 'semantic-new-buffer-setup-functions '(thrift-mode . lambda-thrift-default-setup))
+(add-to-list 'semantic-new-buffer-setup-functions '(thrift-mode . semantic-thrift-default-setup))
 
-(provide 'lambda-thrift-tags)
+(provide 'semantic-thrift-tags)
 
-;;; lambda-thrift-tags.el ends here
+;;; semantic-thrift-tags.el ends here

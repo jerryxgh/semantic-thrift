@@ -6,8 +6,8 @@
 ;;
 ;; It is based on the grammar for thrift version 0.17.0
 
-%package lambda-thrift-wy
-%provide lambda-thrift-wy
+%package semantic-thrift-wy
+%provide semantic-thrift-wy
 
 %{
 (declare-function semantic-parse-region "semantic"
@@ -647,21 +647,21 @@ Like \"foo/bar.thrift\" will return bar."
   (and include-literal (car (split-string (car (last (split-string include-literal "/"))) "\\."))))
 
 ;; Define the lexer for this grammar
-(define-lex lambda-thrift-lexer
+(define-lex semantic-thrift-lexer
   "Lexical analyzer that handles Thrift buffers.
 It ignores whitespaces, newlines and comments."
   semantic-lex-ignore-whitespace
   semantic-lex-ignore-newline
   semantic-lex-ignore-comments
   ;;;; Auto-generated analyzers.
-  lambda-thrift-wy--<number>-regexp-analyzer
-  lambda-thrift-wy--<string>-sexp-analyzer
+  semantic-thrift-wy--<number>-regexp-analyzer
+  semantic-thrift-wy--<string>-sexp-analyzer
   ;; Must detect keywords before other symbols
-  lambda-thrift-wy--<keyword>-keyword-analyzer
-  lambda-thrift-wy--<symbol>-regexp-analyzer
-  lambda-thrift-wy--<punctuation>-string-analyzer
-  lambda-thrift-wy--<block>-block-analyzer
+  semantic-thrift-wy--<keyword>-keyword-analyzer
+  semantic-thrift-wy--<symbol>-regexp-analyzer
+  semantic-thrift-wy--<punctuation>-string-analyzer
+  semantic-thrift-wy--<block>-block-analyzer
   ;;;;
   semantic-lex-default-action)
 
-;;; lambda-thrift.wy ends here
+;;; semantic-thrift.wy ends here

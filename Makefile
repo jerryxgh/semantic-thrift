@@ -13,7 +13,7 @@ EMACS=emacs
 
 LOADPATH= ./
 
-wy_SEMANTIC_GRAMMAR=lambda-thrift.wy
+wy_SEMANTIC_GRAMMAR=semantic-thrift.wy
 VERSION=1.1beta
 
 .PHONY: all
