@@ -1,15 +1,16 @@
-;;; semantic-thrift.el --- Thrift LALR parser for Emacs -*- lexical-binding: t -*-
+;;; semantic-thrift.el --- Thrift LALR parser -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2022 Guanghui Xu
 ;;
 ;; Author: Guanghui Xu gh_xu@qq.com
 ;; Maintainer: Guanghui Xu gh_xu@qq.com
+;; URL: https://github.com/jerryxgh/semantic-thrift
 ;; Created: 2022-11-29
 ;; Version: 0.0.1
-;; Keywords:
+;; Keywords: extensions, thrift, semantic
 ;; Homepage: not distributed yet
 ;; Package-Version: 0.0.1
-;; Package-Requires:
+;; Package-Requires: ((thrift "0.0.1") (emacs "25.1"))
 ;;
 
 ;; This file is not part of GNU Emacs.
@@ -95,8 +96,7 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
       (dolist (ele (semantic-find-tags-by-class 'include semanticdb-current-table) result)
         (if (or (and (listp type) (equal (car type)(semantic-tag-get-attribute ele :alias)))
                 (and (stringp type) (equal type (semantic-tag-get-attribute ele :alias))))
-            (setq result ele)))
-      )
+            (setq result ele))))
     result))
 
 (setq-mode-local thrift-mode
@@ -134,8 +134,7 @@ Use the alternate LALR(1) parser."
    semantic-lex-number-expression semantic-java-number-regexp
    semantic-lex-analyzer #'semantic-thrift-lexer
    semantic-lex-syntax-table semantic-thrift-syntax-table
-   semantic-lex-comment-regex "\\(\\s<\\|\\(?://+\\|/\\*+\\)\\s *\\)"
-   ))
+   semantic-lex-comment-regex "\\(\\s<\\|\\(?://+\\|/\\*+\\)\\s *\\)"))
 
 (add-to-list 'semantic-new-buffer-setup-functions '(thrift-mode . semantic-thrift-default-setup))
 
