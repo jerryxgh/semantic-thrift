@@ -11,8 +11,8 @@ Until now `semantic-thrift` is not in melpa, so only manual installation is supp
 
 (add-to-list 'load-path "<path to semantic-thrift>")
 ;; load semantic-thrift
-(require 'semantic-thrift-tags)
-(with-eval-after-load 'semantic-thrift-tags
+(require 'semantic-thrift)
+(with-eval-after-load 'semantic-thrift
   ;; enable semantic-mode when open thrift file
   (add-hook 'thrift-mode-hook (lambda () (semantic-mode 1)))
   ;; only thrift-mode use semantic, since at present most language use lsp instead of semantic

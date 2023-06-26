@@ -1,4 +1,4 @@
-;;; semantic-thrift-tags.el --- Thrift LALR parser for Emacs -*- lexical-binding: t -*-
+;;; semantic-thrift.el --- Thrift LALR parser for Emacs -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2022 Guanghui Xu
 ;;
@@ -19,7 +19,7 @@
 ;;
 
 ;; Put this file into your load-path and the following into your ~/.emacs:
-;;   (require 'semantic-thrift-tags)
+;;   (require 'semantic-thrift)
 
 ;;; Change Log:
 
@@ -28,11 +28,6 @@
 
 ;;; Code:
 
-;; (add-to-list 'load-path "/Users/bytedance/repository/public/semantic-thrift")
-;; (require 'thrift-wy)
-;; (require 'semantic-thrift-tags)
-;; (add-to-list 'semantic-new-buffer-setup-functions '(thrift-mode . semantic-thrift-default-setup))
-
 (require 'semantic/wisent)
 (require 'semantic/ctxt)
 (require 'semantic/tag-file)
@@ -40,8 +35,8 @@
 (require 'semantic/java)
 (require 'semantic/db-typecache)
 (require 'cc-mode)
-(require 'semantic-thrift-wy)
 (require 'thrift)
+(require 'semantic-thrift-wy)
 
 ;;;;
 ;;;; Simple parser error reporting function
@@ -144,6 +139,6 @@ Use the alternate LALR(1) parser."
 
 (add-to-list 'semantic-new-buffer-setup-functions '(thrift-mode . semantic-thrift-default-setup))
 
-(provide 'semantic-thrift-tags)
+(provide 'semantic-thrift)
 
-;;; semantic-thrift-tags.el ends here
+;;; semantic-thrift.el ends here
