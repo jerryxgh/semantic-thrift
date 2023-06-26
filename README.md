@@ -3,7 +3,7 @@
 With `thrift-mode`, `semantic-thrift` support semantic level jumping of thrift.
 
 ## Installation
-Until now semantic-thrift is not in melpa, so only manual installation is supported. Download semantic-mode code and decompress it to where you wanted, add some code like below:
+Until now `semantic-thrift` is not in melpa, so only manual installation is supported. Download `semantic-thrift` code and decompress it to where you wanted, add some code like below to emacs configuration:
 ```emacs-lisp
 ;; semantic-thrift depends on thrift-mode, so thrift-mode should be installed before going on. Just like this
 ;; (use-package thrift
