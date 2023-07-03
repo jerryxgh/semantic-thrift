@@ -1,5 +1,9 @@
 ;;; semantic-thrift.wy -- LALR grammar for thrift
 
+;; Copyright (C) 2023 Guanghui Xu
+
+;; Author: Guanghui Xu gh_xu@qq.com
+
 ;;; License:
 
 ;; This file is not part of GNU Emacs.
@@ -292,7 +296,7 @@ TokWithDot:
 
 Include:
     tok_include tok_literal
-    (INCLUDE-TAG $2 nil :alias (extract-include-id $2))
+    (INCLUDE-TAG $2 nil :alias (semantic-thrift-extract-include-id $2))
   ;
 
 Definition:
@@ -654,8 +658,8 @@ TypeAnnotationValue:
 
 %%
 
-(defun extract-include-id (include-literal)
-  "Extract include id from INCLUDE_LITERAL.
+(defun semantic-thrift-extract-include-id (include-literal)
+  "Extract include id from INCLUDE-LITERAL.
 Like \"foo/bar.thrift\" will return bar."
   (if (and include-literal
            (string-prefix-p "\"" include-literal)

@@ -2,8 +2,8 @@
 
 ;; Copyright (C) 2023 Guanghui Xu
 
-;; Author: Guanghui Xu gh_xu@qq.com
-;; Created: 2023-07-03 14:58:21+0800
+;; Author: Guanghui Xu <gh_xu@qq.com>
+;; Created: 2023-07-03 15:49:09+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -207,7 +207,7 @@
      ((tok_include tok_literal)
       (wisent-raw-tag
        (semantic-tag-new-include $2 nil :alias
-				 (extract-include-id $2)))))
+				 (semantic-thrift-extract-include-id $2)))))
     (Definition
       ((Const))
       ((TypeDefinition))
@@ -584,8 +584,8 @@
 
 ;;; Epilogue
 ;;
-(defun extract-include-id (include-literal)
-  "Extract include id from INCLUDE_LITERAL.
+(defun semantic-thrift-extract-include-id (include-literal)
+  "Extract include id from INCLUDE-LITERAL.
 Like \"foo/bar.thrift\" will return bar."
   (if (and include-literal
            (string-prefix-p "\"" include-literal)

@@ -44,7 +44,7 @@ wy: $(addsuffix -wy.elc, $(basename $(wy_SEMANTIC_GRAMMAR)))
 wy: $(addsuffix -wy.el, $(basename $(wy_SEMANTIC_GRAMMAR)))
 wy: PRELOADS=semantic/grammar semantic/bovine/grammar semantic/wisent/grammar
 
-wy: EMACSFLAGS+= --eval '(setq max-specpdl-size 1500 max-lisp-eval-depth 700 wisent-verbose-flag t)'
+wy: EMACSFLAGS+= --eval '(setq max-specpdl-size 1500 max-lisp-eval-depth 700 wisent-verbose-flag t user-full-name "Guanghui Xu" user-mail-address "gh_xu@qq.com")'
 %.elc: %.el
 	$(EMACS) $(EMACSFLAGS) $(addprefix -L ,$(LOADPATH)) --eval '(progn $(call require, $(PRELOADS)))' -f batch-byte-compile $^
 
