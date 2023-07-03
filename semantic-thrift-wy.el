@@ -1,9 +1,9 @@
 ;;; semantic-thrift-wy.el --- Generated parser support file
 
-;; Copyright (C) 2023 bytedance
+;; Copyright (C) 2023 Guanghui Xu
 
-;; Author: bytedance <bytedance@C02FT0L6MD6V>
-;; Created: 2023-06-25 15:31:38+0800
+;; Author: Guanghui Xu gh_xu@qq.com
+;; Created: 2023-07-03 14:58:21+0800
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
