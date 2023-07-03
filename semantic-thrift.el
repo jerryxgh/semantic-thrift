@@ -29,16 +29,13 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-
 ;;
-
-;; Put this file into your load-path and the following into your ~/.emacs:
-;;   (require 'semantic-thrift)
-
-;;; Change Log:
-
-;; Version $(3) 2022-11-29 GuanghuiXu
-;;   - Initial release
+;; With thrift-mode, semantic-thrift support semantic level jumping of
+;; thrift. Until now, there is no tag tool for thrift in emacs, including
+;; glboal, so I create this tiny project, through wisent, this project implement
+;; grammatical analysis of thirft, and through semantic, it's able to support
+;; semantic level jumping, such like jumping to definiton, even in different
+;; file.
 
 ;;; Code:
 
