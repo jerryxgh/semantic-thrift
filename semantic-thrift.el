@@ -30,12 +30,11 @@
 
 ;;; Commentary:
 ;;
-;; With thrift-mode, semantic-thrift support semantic level jumping of
-;; thrift. Until now, there is no tag tool for thrift in emacs, including
-;; glboal, so I create this tiny project, through wisent, this project implement
-;; grammatical analysis of thirft, and through semantic, it's able to support
-;; semantic level jumping, such like jumping to definiton, even in different
-;; file.
+;; With thrift-mode, semantic-thrift support semantic level jumping of thrift.
+;; Until now, there is no tag tool for thrift in Emacs, including glboal, so I
+;; create this tiny project, through wisent, this project implement grammatical
+;; analysis of thirft, and through semantic, it's able to support semantic level
+;; jumping, such like jumping to definiton, even in different file.
 
 ;;; Code:
 

@@ -32,6 +32,7 @@ struct OneOfEachZZ {
     9: string zomg_unicode,
     10: bool what_who,
     11: Fruit fruit2,
+    12: included.Object.
 }
 
 const i32 hex_const = 0x0001F
