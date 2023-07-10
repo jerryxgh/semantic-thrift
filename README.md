@@ -29,7 +29,7 @@ Because `semantic-thrift` depends on `thrift`, so `thrift` should be installed b
   (setq thrift-mode-syntax-table semantic-thrift-syntax-table))
 ```
 ### From MELPA
-semantic-thrift is available on [![MELPA](http://melpa.org/#/semantic-thrift)], follow the [![instructions](https://melpa.org/#/getting-started)] to set up the repository.
+semantic-thrift is available on [MELPA](http://melpa.org/#/semantic-thrift), follow the [instructions](https://melpa.org/#/getting-started) to set up the repository.
 Install semantic-thrift with `M-x package-install RET semantic-thrift RET`.
 Then add the following:
 ```emacs-lisp
