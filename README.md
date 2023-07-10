@@ -1,8 +1,8 @@
 # semantic-thrift
-[![MELPA](https://img.shields.io/badge/license-GPL_3-green.svg)](http://www.gnu.org/licenses/gpl-3.0.txt)
+[![License GPL 3](https://img.shields.io/badge/license-GPL_3-green.svg)](http://www.gnu.org/licenses/gpl-3.0.txt)
 [![MELPA](https://melpa.org/packages/semantic-thrift-badge.svg)](https://melpa.org/#/semantic-thrift)
 
-With `thrift-mode`, `semantic-thrift` support semantic level jumping of thrift.
+With `thrift`, `semantic-thrift` support semantic level jumping of thrift.
 
 Until now, there is no tag tool for `thrift` in emacs, `global` doesn't not support `thrift` currently, so I create this tiny project, through `wisent`, this project implement grammatical analysis of `thirft`, and through `semantic`, it's able to support semantic level jumping, such like jumping to definiton, even in different file by include.
 
@@ -29,7 +29,7 @@ Because =semantic-thrift= depends on =thrift=, so =thrift= should be installed b
   (setq thrift-mode-syntax-table semantic-thrift-syntax-table))
 ```
 ### From MELPA
-semantic-thrift is available on [[http://melpa.org/#/semantic-thrift][MELPA]], follow the [[https://melpa.org/#/getting-started][instructions]] to set up the repository.
+semantic-thrift is available on [![MELPA](http://melpa.org/#/semantic-thrift)], follow the [![instructions](https://melpa.org/#/getting-started)] to set up the repository.
 Install semantic-thrift with =M-x package-install RET semantic-thrift RET=.
 Then add the following:
 ```emacs-lisp
@@ -67,10 +67,4 @@ We recommend =use-package= like tool to manage package, like this:
 
   ;; thrift-mode syntax-table is too weak, it cann't process <> correctly
   (setq thrift-mode-syntax-table semantic-thrift-syntax-table))
-```
-
-
-## config
-```emacs-lisp
-
 ```
