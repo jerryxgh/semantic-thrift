@@ -8,7 +8,7 @@ Until now, there is no tag tool for `thrift` in emacs, `global` doesn't not supp
 
 ## Installation
 ### From source
-Because =semantic-thrift= depends on =thrift=, so =thrift= should be installed before going on. Then download `semantic-thrift` code and decompress it to where you wanted, add some code like below to emacs configuration:
+Because `semantic-thrift` depends on `thrift`, so `thrift` should be installed before going on. Then download `semantic-thrift` code and decompress it to where you wanted, add some code like below to emacs configuration:
 ```emacs-lisp
 ;; make sure semantic-thrift is in load-path:
 (add-to-list 'load-path "<path to semantic-thrift>")
@@ -30,7 +30,7 @@ Because =semantic-thrift= depends on =thrift=, so =thrift= should be installed b
 ```
 ### From MELPA
 semantic-thrift is available on [![MELPA](http://melpa.org/#/semantic-thrift)], follow the [![instructions](https://melpa.org/#/getting-started)] to set up the repository.
-Install semantic-thrift with =M-x package-install RET semantic-thrift RET=.
+Install semantic-thrift with `M-x package-install RET semantic-thrift RET`.
 Then add the following:
 ```emacs-lisp
 ;; load semantic-thrift
@@ -50,7 +50,7 @@ Then add the following:
   (setq thrift-mode-syntax-table semantic-thrift-syntax-table))
 ```
 
-We recommend =use-package= like tool to manage package, like this:
+We recommend `use-package` like tool to manage package, like this:
 ```emacs-lisp
 (use-package semantic-thrift
   :ensure t
