@@ -8,7 +8,7 @@
 ;; Created: 2022-11-29
 ;; Version: 0.0.1
 ;; Keywords: extensions, thrift, semantic
-;; Homepage: not distributed yet
+;; Homepage: https://github.com/jerryxgh/semantic-thrift
 ;; Package-Version: 0.0.1
 ;; Package-Requires: ((thrift "0.0.1") (emacs "25.1"))
 ;;
