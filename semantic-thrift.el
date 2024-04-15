@@ -112,7 +112,6 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
                  semanticdb-find-default-throttle
                  '(local recursive project unloaded system))
 
-;;;###autoload
 (defvar semantic-thrift-syntax-table
   (let ((table (copy-syntax-table java-mode-syntax-table)))
     ;; Comments can start with //, /* or # characters.
@@ -133,7 +132,6 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
 ;; In semantic/imenu.el, not part of Emacs.
 (defvar semantic-imenu-summary-function)
 
-;;;###autoload
 (defun semantic-thrift-default-setup ()
   "Hook run to setup Semantic in `thrift-mode'.
 Use the alternate LALR(1) parser."
