@@ -113,17 +113,70 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
                  '(local recursive project unloaded system))
 
 (defvar semantic-thrift-syntax-table
-  (let ((table (copy-syntax-table java-mode-syntax-table)))
-    ;; Comments can start with //, /* or # characters.
-    (modify-syntax-entry ?/ ". 124b" table)
-    (modify-syntax-entry ?* ". 23" table)
-    (modify-syntax-entry ?# "< b" table)
-    (modify-syntax-entry ?\n "> b" table)
-    (modify-syntax-entry ?\^m "> b" table)
+  (let ((table (make-syntax-table)))
+
+    ;; --- Whitespace ---
+    ;; Already set in standard-syntax-table: space, tab, newline, etc.
+
+    ;; --- Word constituents: letters and digits ---
+    ;; Standard table already marks a-z, A-Z as 'w', and 0-9 as 'w' (in most locales)
+    ;; But to be explicit and safe:
+    (let ((i ?a))
+      (while (<= i ?z)
+        (modify-syntax-entry i "w" table)
+        (setq i (1+ i))))
+    (let ((i ?A))
+      (while (<= i ?Z)
+        (modify-syntax-entry i "w" table)
+        (setq i (1+ i))))
+    (let ((i ?0))
+      (while (<= i ?9)
+        (modify-syntax-entry i "w" table)
+        (setq i (1+ i))))
+
+    ;; Underscore is part of identifiers (e.g., my_struct)
+    (modify-syntax-entry ?_ "w" table)
+
+    ;; Minus/hyphen is NOT part of identifiers in Thrift → treat as punctuation
+    (modify-syntax-entry ?- "." table)
+
+    ;; Dollar sign is not used in Thrift identifiers
+    (modify-syntax-entry ?$ "." table)
+
+    ;; --- Parentheses and delimiters ---
+    (modify-syntax-entry ?\( "()" table)
+    (modify-syntax-entry ?\) ")(" table)
+    (modify-syntax-entry ?\[ "(]" table)
+    (modify-syntax-entry ?\] ")[" table)
+    (modify-syntax-entry ?\{ "(}" table)
+    (modify-syntax-entry ?\} "){" table)
+
+    ;; Commas, semicolons, colons are punctuation
+    (modify-syntax-entry ?, "." table)
+    (modify-syntax-entry ?\; "." table)
+    (modify-syntax-entry ?: "." table)
+
+    ;; Operators like <, >, =, !, etc. are punctuation
+    (dolist (c '(?< ?> ?= ?! ?& ?| ?~ ?^ ?% ?+ ?* ?/ ?\\))
+      (modify-syntax-entry c "." table))
+
+    ;; --- Strings: only double quotes "..." ---
+    (modify-syntax-entry ?\" "\"" table)
+    ;; Single quotes are NOT string delimiters in Thrift → treat as punctuation
+    (modify-syntax-entry ?\' "." table)
+
+    ;; --- Comments ---
+    ;; // style: / is punctuation, but with special comment flags
+    (modify-syntax-entry ?/ ". 124b" table)   ; can start // or /*, and help end */
+    (modify-syntax-entry ?* ". 23" table)     ; for /* ... */
+
+    ;; # style single-line comment
+    (modify-syntax-entry ?# "< b" table)      ; starts comment until newline
+    (modify-syntax-entry ?\n "> b" table)     ; newline ends # comment
+    (modify-syntax-entry ?\r "> b" table)     ; also handle \r (for \r\n line endings)
 
     table)
-  "Syntax table used in `thrift-mode' buffers.")
-
+  "Syntax table for Thrift (.thrift) files.")
 
 ;;;;
 ;;;; Semantic integration of the Thrift LALR parser
