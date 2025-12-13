@@ -12,27 +12,27 @@ struct Fruit {
 }
 
 enum MyEnum1 {
-  ME1_0 = 0,
-  ME1_1 = 1,
-  ME1_2,
-  ME1_3,
-  ME1_5 = 5,
-  ME1_6,
+  ME1_0 = 0
+  ME1_1 = 1
+  ME1_2
+  ME1_3
+  ME1_5 = 5
+  ME1_6
 }
 
 struct OneOfEachZZ {
-    1: bool im_true,
-    2: bool im_false,
-    3: byte a_bite,
-    4: i16 integer16,
-    5: i32 integer32,
-    6: i64 integer64,
-    7: double double_precision,
-    8: string some_characters,
-    9: string zomg_unicode,
-    10: bool what_who,
-    11: Fruit fruit2,
-    12: included.Object o,
+    1: bool im_true
+    2: bool im_false
+    3: byte a_bite
+    4: i16 integer16
+    5: i32 integer32
+    6: i64 integer64
+    7: double double_precision
+    8: string some_characters
+    9: string zomg_unicode
+    10: bool what_who
+    11: Fruit fruit2
+    12: included."sub/included.thrift"
 }
 
 const i32 hex_const = 0x0001F

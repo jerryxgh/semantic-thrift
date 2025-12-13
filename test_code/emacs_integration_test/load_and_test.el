@@ -5,6 +5,10 @@
 
 (require 'semantic-thrift)
 
+(when (featurep 'company)
+  (setq company-semantic-modes '(thrift-mode))
+  )
+
 (setq thrift-indent-level 4)
 (add-hook 'thrift-mode-hook (lambda ()
                               (semantic-mode 1)))

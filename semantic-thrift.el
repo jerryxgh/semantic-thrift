@@ -45,6 +45,7 @@
 (require 'semantic/java)
 (require 'semantic/db-typecache)
 (require 'semantic/imenu)
+(require 'seq)
 (require 'cc-mode)
 (require 'thrift)
 (require 'semantic-thrift-wy)
@@ -83,16 +84,31 @@ will be stored.  If nil, that data is thrown away.
 Optional argument THROWSYM specifies a symbol the throw on non-recoverable
 error.
 Remaining arguments FLAGS are additional flags to apply when searching."
-  ;; (message "semantic-analyze-find-tag-sequence,sequence:%S" sequence)
   (let ((result (semantic-analyze-find-tag-sequence-default sequence scope typereturn throwsym flags)))
     (let ((filtered-result (seq-filter (lambda (ele)
                                          (if (equal 'include (semantic-tag-class ele))
-                                             (equal (car (last sequence)) (semantic-tag-get-attribute ele :alias))
+                                             (if (equal (car (last sequence)) "")
+                                                 (equal (car sequence) (semantic-tag-get-attribute ele :alias))       ;; in completion
+                                               (equal (car (last sequence)) (semantic-tag-get-attribute ele :alias))) ;; in jump
                                            t))
                                        result)))
       (if (length> filtered-result 0)
           filtered-result
         (semantic-analyze-find-tag-sequence-default (last sequence) scope typereturn throwsym flags)))))
+
+(defun semantic-thrift--strip-quotes (s)
+  (if (and (stringp s)
+           (string-prefix-p "\"" s)
+           (string-suffix-p "\"" s))
+      (substring s 1 -1)
+    s))
+
+(defun semantic-thrift--split-type (type)
+  (cond
+   ((stringp type)
+    (split-string (semantic-thrift--strip-quotes type) "\\."))
+   ((listp type) type)
+   (t nil))
 
 (define-mode-local-override semanticdb-typecache-find thrift-mode (type &optional path find-file-match)
   "Search the typecache for TYPE in PATH.
@@ -100,13 +116,29 @@ If type is a string, split the string, and search for the parts.
 If type is a list, treat the type as a pre-split string.
 PATH can be nil for the current buffer, or a semanticdb table.
 FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
-  ;; (message "semanticdb-typecache-find,type:%S,stringp:%S" type (stringp type))
   (let ((result (semanticdb-typecache-find-default type path find-file-match)))
     (if result result
-      (dolist (ele (semantic-find-tags-by-class 'include semanticdb-current-table) result)
-        (if (or (and (listp type) (equal (car type)(semantic-tag-get-attribute ele :alias)))
-                (and (stringp type) (equal type (semantic-tag-get-attribute ele :alias))))
-            (setq result ele))))
+      (let* ((parts (semantic-thrift--split-type type))
+             (alias (car parts))
+             (rest (cadr parts)))
+        (when alias
+          (let* ((incs (semantic-find-tags-by-class 'include (semanticdb-file-table)))
+                 (inc (seq-find (lambda (t)
+                                  (equal (semantic-tag-get-attribute t :alias) alias))
+                                incs))
+                 (f (and inc (semantic-dependency-tag-file inc)))
+                 (table (and f (file-exists-p f) (semanticdb-file-table-for-file f))))
+            (cond
+             ((and table rest (> (length rest) 0))
+              (let* ((found (semanticdb-find-tags-by-prefix rest table))
+                     (tags (cond
+                            ((and (consp found) (semantic-tag-p (car found))) found)
+                            ((and (listp found) (consp (car found)) (semantic-tag-p (cadr (car found))))
+                             (apply #'append (mapcar #'cdr found)))
+                            (t found))))
+                (setq result (seq-filter (lambda (t) (eq (semantic-tag-class t) 'type)) tags))))
+             ((and table (or (null rest) (equal rest "")))
+              (setq result (semantic-find-tags-by-class 'type table))))))))
     result))
 
 (setq-mode-local thrift-mode
