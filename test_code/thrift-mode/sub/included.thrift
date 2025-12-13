@@ -6,6 +6,11 @@ struct Object {
     2: string name
 }
 
+struct Object1 {
+    1: i64 id
+    2: string name
+}
+
 /**
  * Docstring!
  */

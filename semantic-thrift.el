@@ -44,6 +44,7 @@
 (require 'semantic/analyze)
 (require 'semantic/java)
 (require 'semantic/db-typecache)
+(require 'semantic/imenu)
 (require 'cc-mode)
 (require 'thrift)
 (require 'semantic-thrift-wy)
@@ -182,9 +183,6 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
 ;;;; Semantic integration of the Thrift LALR parser
 ;;;;
 
-;; In semantic/imenu.el, not part of Emacs.
-(defvar semantic-imenu-summary-function)
-
 (defun semantic-thrift-default-setup ()
   "Hook run to setup Semantic in `thrift-mode'.
 Use the alternate LALR(1) parser."
@@ -194,7 +192,9 @@ Use the alternate LALR(1) parser."
    semantic-lex-number-expression semantic-java-number-regexp
    semantic-lex-analyzer #'semantic-thrift-lexer
    semantic-lex-syntax-table semantic-thrift-syntax-table
-   semantic-lex-comment-regex "\\(\\s<\\|\\(?://+\\|/\\*+\\)\\s *\\)"))
+   semantic-lex-comment-regex "\\(\\s<\\|\\(?://+\\|/\\*+\\)\\s *\\)")
+  ;; integration with imenu
+  (setq-local imenu-create-index-function 'semantic-create-imenu-index))
 
 (add-to-list 'semantic-new-buffer-setup-functions '(thrift-mode . semantic-thrift-default-setup))
 
