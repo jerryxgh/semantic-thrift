@@ -1,14 +1,14 @@
 namespace go thrift_test
 namespace java thrift.test
 
-include "sub/included.thrift"
+include "sub/included2.thrift"
 
 struct Fruit {
     1: optional i64 a
     2: i64 b
     3: i32 c
     4: string d
-    5: included.Object o
+    5: included2.Object o
 }
 
 enum MyEnum1 {
@@ -32,7 +32,7 @@ struct OneOfEachZZ {
     9: string zomg_unicode
     10: bool what_who
     11: Fruit fruit2
-    12: included."sub/included.thrift"
+    12: included2.
 }
 
 const i32 hex_const = 0x0001F
@@ -42,7 +42,6 @@ const i32 GEN_ME = -3523553
 const double GEn_DUB = 325.532
 const double GEn_DU = 085.2355
 const string GEN_STRING = "asldkjasfd"
-
 service UnderscoreSrv {
     i64 some_rpc_call(1: string message)
 }

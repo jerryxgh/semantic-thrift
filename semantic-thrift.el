@@ -84,17 +84,35 @@ will be stored.  If nil, that data is thrown away.
 Optional argument THROWSYM specifies a symbol the throw on non-recoverable
 error.
 Remaining arguments FLAGS are additional flags to apply when searching."
-  (let ((result (semantic-analyze-find-tag-sequence-default sequence scope typereturn throwsym flags)))
-    (let ((filtered-result (seq-filter (lambda (ele)
-                                         (if (equal 'include (semantic-tag-class ele))
-                                             (if (equal (car (last sequence)) "")
-                                                 (equal (car sequence) (semantic-tag-get-attribute ele :alias))       ;; in completion
-                                               (equal (car (last sequence)) (semantic-tag-get-attribute ele :alias))) ;; in jump
-                                           t))
-                                       result)))
-      (if (length> filtered-result 0)
-          filtered-result
-        (semantic-analyze-find-tag-sequence-default (last sequence) scope typereturn throwsym flags)))))
+  (message "semantic-analyze-find-tag-sequence,sequence=%S,typereturn=%S,throwsym=%S,flags=%S" sequence typereturn throwsym flags)
+  (let ((result '()))
+    (dolist (ele sequence)
+      (message "semantic-analyze-find-tag-sequence,ele=%S" ele)
+      (let ((val (semantic-analyze-find-tag-sequence-default ele scope typereturn throwsym flags)))
+        (message "semantic-analyze-find-tag-sequence,val=%S" val)
+        (if val
+          (setq result (append val result)))))
+    (message "semantic-analyze-find-tag-sequence,before_result=%S" result)
+    ;; (setq result (last result))
+    (setq result (list (car result)))
+    (message "semantic-analyze-find-tag-sequence,result=%S" result)
+    result)
+  ;; (let ((result (semantic-analyze-find-tag-sequence-default sequence scope typereturn throwsym flags)))
+  ;;   (let ((filtered-result
+  ;;          (seq-filter
+  ;;           (lambda (ele)
+  ;;             (if (equal 'include (semantic-tag-class ele))
+  ;;                 (if (equal (cadr sequence) "")
+  ;;                     (equal (car sequence) (semantic-tag-get-attribute ele :alias))       ;; in completion
+  ;;                   (equal (car (last sequence)) (semantic-tag-get-attribute ele :alias))) ;; in jump
+  ;;               t))
+  ;;           result)))
+  ;;     (if (length> filtered-result 0)
+  ;;         (setq result filtered-result)
+  ;;       (setq result (semantic-analyze-find-tag-sequence-default (last sequence) scope typereturn throwsym flags))))
+  ;;   (message "semantic-analyze-find-tag-sequence,result=%S" result)
+  ;;   result)
+  )
 
 (defun semantic-thrift--strip-quotes (s)
   (if (and (stringp s)
@@ -108,7 +126,7 @@ Remaining arguments FLAGS are additional flags to apply when searching."
    ((stringp type)
     (split-string (semantic-thrift--strip-quotes type) "\\."))
    ((listp type) type)
-   (t nil))
+   (t nil)))
 
 (define-mode-local-override semanticdb-typecache-find thrift-mode (type &optional path find-file-match)
   "Search the typecache for TYPE in PATH.
@@ -116,30 +134,36 @@ If type is a string, split the string, and search for the parts.
 If type is a list, treat the type as a pre-split string.
 PATH can be nil for the current buffer, or a semanticdb table.
 FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
+  (message "semanticdb-typecache-find,type=%S,path=%S,find-file-match=%S" type path find-file-match)
   (let ((result (semanticdb-typecache-find-default type path find-file-match)))
-    (if result result
-      (let* ((parts (semantic-thrift--split-type type))
-             (alias (car parts))
-             (rest (cadr parts)))
-        (when alias
-          (let* ((incs (semantic-find-tags-by-class 'include (semanticdb-file-table)))
-                 (inc (seq-find (lambda (t)
-                                  (equal (semantic-tag-get-attribute t :alias) alias))
-                                incs))
-                 (f (and inc (semantic-dependency-tag-file inc)))
-                 (table (and f (file-exists-p f) (semanticdb-file-table-for-file f))))
-            (cond
-             ((and table rest (> (length rest) 0))
-              (let* ((found (semanticdb-find-tags-by-prefix rest table))
-                     (tags (cond
-                            ((and (consp found) (semantic-tag-p (car found))) found)
-                            ((and (listp found) (consp (car found)) (semantic-tag-p (cadr (car found))))
-                             (apply #'append (mapcar #'cdr found)))
-                            (t found))))
-                (setq result (seq-filter (lambda (t) (eq (semantic-tag-class t) 'type)) tags))))
-             ((and table (or (null rest) (equal rest "")))
-              (setq result (semantic-find-tags-by-class 'type table))))))))
+    (dolist (ele (semantic-find-tags-by-class 'include semanticdb-current-table) result)
+      (if (or (and (listp type) (equal (car type)(semantic-tag-get-attribute ele :alias)))
+              (and (stringp type) (equal type (semantic-tag-get-attribute ele :alias))))
+          (setq result ele)))
     result))
+  ;; (let ((result (semanticdb-typecache-find-default type path find-file-match)))
+  ;;   (if result result
+  ;;     (let* ((parts (semantic-thrift--split-type type))
+  ;;            (alias (car parts))
+  ;;            (rest (cadr parts)))
+  ;;       (when alias
+  ;;         (let* ((incs (semantic-find-tags-by-class 'include semanticdb-current-table))
+  ;;                (inc (seq-find (lambda (t)
+  ;;                                 (equal (semantic-tag-get-attribute t :alias) alias))
+  ;;                               incs))
+  ;;                (f (and inc (semantic-dependency-tag-file inc)))
+  ;;                (table (and f (file-exists-p f) (semanticdb-file-table f))))
+  ;;           (cond
+  ;;            ((and table rest (> (length rest) 0))
+  ;;             (let* ((found (semanticdb-find-tags-by-prefix rest table))
+  ;;                    (tags (cond
+  ;;                           ((and (consp found) (semantic-tag-p (car found))) found)
+  ;;                           ((and (listp found) (consp (car found)) (semantic-tag-p (cadr (car found))))
+  ;;                            (apply #'append (mapcar #'cdr found)))
+  ;;                           (t found))))
+  ;;               (setq result (seq-filter (lambda (t) (eq (semantic-tag-class t) 'type)) tags))))
+  ;;            ((and table (or (null rest) (equal rest "")))
+  ;;             (setq result (semantic-find-tags-by-class 'type table))))))))))
 
 (setq-mode-local thrift-mode
                  semanticdb-find-default-throttle
