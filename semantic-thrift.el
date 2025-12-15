@@ -89,7 +89,9 @@ Remaining arguments FLAGS are additional flags to apply when searching."
       (let ((val (semantic-analyze-find-tag-sequence-default ele scope typereturn throwsym flags)))
         (if val
           (setq result (append val result)))))
-    (setq result (list (car result)))
+    ;; only need the first one
+    (if (length> result 1)
+        (setq result (list (car result))))
     result))
 
 (define-mode-local-override semanticdb-typecache-find thrift-mode (type &optional path find-file-match)
@@ -98,10 +100,9 @@ If type is a string, split the string, and search for the parts.
 If type is a list, treat the type as a pre-split string.
 PATH can be nil for the current buffer, or a semanticdb table.
 FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
-  ;; (message "semanticdb-typecache-find,type=%S,path=%S,find-file-match=%S" type path find-file-match)
   (let ((result (semanticdb-typecache-find-default type path find-file-match)))
     (dolist (ele (semantic-find-tags-by-class 'include semanticdb-current-table) result)
-      (if (or (and (listp type) (equal (car type)(semantic-tag-get-attribute ele :alias)))
+      (if (or (and (listp type) (equal (car type) (semantic-tag-get-attribute ele :alias)))
               (and (stringp type) (equal type (semantic-tag-get-attribute ele :alias))))
           (setq result ele)))
     result))
@@ -125,7 +126,7 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
                 (table (and f (file-exists-p f) (semanticdb-file-table-object f)))
                 (result nil))
            (cond
-            ((and table rest (> (length rest) 0))
+            ((and table rest (length> rest 0))
              (let* ((found (semantic-find-tags-for-completion rest table))
                     (tags (cond
                            ((and (consp found) (semantic-tag-p (car found))) found)
