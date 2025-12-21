@@ -86,11 +86,11 @@ error.
 Remaining arguments FLAGS are additional flags to apply when searching."
   (let ((result '()))
     (dolist (ele sequence)
-      (let ((val (semantic-analyze-find-tag-sequence-default ele scope typereturn throwsym flags)))
+      (let ((val (semantic-analyze-find-tag-sequence-default (list ele) scope typereturn throwsym flags)))
         (if val
           (setq result (append val result)))))
     ;; only need the first one
-    (if (length> result 1)
+    (if (length> result 0)
         (setq result (list (car result))))
     result))
 
@@ -137,6 +137,24 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
             ((and table (or (null rest) (equal rest "")))
              (setq result (semantic-find-tags-by-class 'type table))))
            result))))
+
+;;; Completion At Point function
+(defun semantic-thrift-analyze-completion-at-point-function ()
+  "Return possible analysis completions at point.
+The completions provided are via `semantic-analyze-possible-completions'.
+This function can be used by `completion-at-point-functions'."
+  (when (semantic-active-p)
+    (let* ((ctxt (semantic-analyze-current-context))
+           (possible (semantic-analyze-possible-completions ctxt)))
+
+      ;; The return from this is either:
+      ;; nil - not applicable here.
+      ;; A list: (START END COLLECTION . PROPS)
+      (when possible
+        (list (car (oref ctxt bounds))
+              (cdr (oref ctxt bounds))
+              possible
+              :company-prefix-length t)))))
 
 (setq-mode-local thrift-mode
                  semanticdb-find-default-throttle
@@ -223,7 +241,9 @@ Use the alternate LALR(1) parser."
    semantic-lex-syntax-table semantic-thrift-syntax-table
    semantic-lex-comment-regex "\\(\\s<\\|\\(?://+\\|/\\*+\\)\\s *\\)")
   ;; integration with imenu
-  (setq-local imenu-create-index-function 'semantic-create-imenu-index))
+  (setq-local imenu-create-index-function 'semantic-create-imenu-index)
+  (add-hook 'completion-at-point-functions
+            #'semantic-thrift-analyze-completion-at-point-function nil 'local))
 
 (add-to-list 'semantic-new-buffer-setup-functions '(thrift-mode . semantic-thrift-default-setup))
 
