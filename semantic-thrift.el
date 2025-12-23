@@ -133,7 +133,7 @@ FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
                            ((and (listp found) (consp (car found)) (semantic-tag-p (cadr (car found))))
                             (apply #'append (mapcar #'cdr found)))
                            (t found))))
-               (setq result (seq-filter (lambda (t) (eq (semantic-tag-class t) 'type)) tags))))
+               (setq result (seq-filter (lambda (tag) (eq (semantic-tag-class tag) 'type)) tags))))
             ((and table (or (null rest) (equal rest "")))
              (setq result (semantic-find-tags-by-class 'type table))))
            result))))
